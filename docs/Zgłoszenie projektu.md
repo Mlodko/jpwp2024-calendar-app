@@ -8,7 +8,7 @@
   
 ### Paweł Młodkowski
 
-mlodkowskip@student.agh.edu.pl
+<mlodkowskip@student.agh.edu.pl>
 
 ## Cel projektu
 

@@ -16,7 +16,7 @@
 - Założenia i funkcje aplikacji:
 	- Współdzielenie workspace'u przez wielu użytkowników (==**znaleźć inne określenie**==)
 	- Kalendarz i wydarzenia w nim wraz z integracją z popularnymi kalendarzami online, np. kalendarz Google
-	- Zadania wraz z integracją z resztą modułów aplikacji, systemem wersjonowania Git, oraz serwisem Github, m. in.:
+	- Zadania wraz z integracją z resztą modułów aplikacji, systemem wersjonowania Git, oraz serwisem Github, m.in.
 		- "Przypinanie" konkretnych branchy, pull requestów lub issues, zależnie od ich stanu zadania będą automatycznie oznaczane jako wykonane
 		- Dodawanie zadań to tablic kanban
 		- Przypisywanie użytkowników do zadań

@@ -2,7 +2,7 @@
 
 - [ ] Postawienie projektu w *IntelliJ*:
 	- postawienie mu *JavaFX* - tym razem żeby zadziałało, bo mi ostatnio się buntował gagatek;
-	- chcemy *log4j*?
+	- chcemy *log4j*? Tak
 	- coś jeszcze z takich bardziej podstawowych bibliotek?
 	- dzielimy pracę na Gicie na branche itp.? nie wiem sam czy jest sens, choć może to najzwyczajniej ładnie wyglądać;
 - [ ] Obsługa *Markdowna:*

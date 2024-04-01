@@ -1,4 +1,4 @@
-package calendarapp.client.backend;
+package client.backend;
 
 public interface Savable<T> {
 

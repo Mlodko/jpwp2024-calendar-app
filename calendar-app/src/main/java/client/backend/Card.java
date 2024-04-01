@@ -1,4 +1,4 @@
-package calendarapp.client.backend;
+package client.backend;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;

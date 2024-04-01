@@ -1,13 +1,15 @@
-package calendarapp.client.backend;
+package client.backend;
 
+
+import biweekly.Biweekly;
+import biweekly.ICalendar;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
-import net.sf.biweekly;
 
 
 // not to JSON, to .ical!!!!
-public class Calendar {
+public class Calendar implements Savable<Calendar>{
     private String id;
 
     public void setID(String newID) {
@@ -58,6 +60,18 @@ public class Calendar {
         return removedOrphans;
     }
 
+    @Override
+    public Calendar loadFromString(String icalText) {
+        return null;
+        // TODO
+    }
+
+    @Override
+    public String saveToString() {
+        return null;
+        // TODO
+    }
+
     //TODO ArrayList<User> users;
 
     /*
@@ -80,6 +94,8 @@ public class Calendar {
         }
     }
     */
+
+
 }
 /*
     TODO implement ical serialization

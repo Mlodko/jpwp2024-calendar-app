@@ -1,19 +1,26 @@
-package client.backend;
+package client.backend.models;
 
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import javafx.scene.paint.Color;
 
-import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import java.util.UUID;
+
+/*
+    TODO - it all comes with FILE PATHS ISSUE:
+        - [ ] single kanban's data reading from JSON and upgrading/writing into JSON
+        - [ ] single card's data reading from JSON and upgrading/writing into JSON
+        - [ ] single calendar's data reading from JSON and upgrading/writing into JSON
+ */
+
 
 public class Card implements Savable<Card>, KanbanInsertable {
 
-// fields with getters and setters:
-
+    // fields with getters and setters:
     @Expose
     private String id;
 
@@ -124,6 +131,10 @@ public class Card implements Savable<Card>, KanbanInsertable {
         this.labelColor = labelColor;
     }
 
+    public Card(String id) {
+        this.id = id;
+    }
+
 
     public Card loadFromString(String json_text) {
         GsonBuilder builder = new GsonBuilder();
@@ -160,18 +171,13 @@ public class Card implements Savable<Card>, KanbanInsertable {
         System.out.println(new_card.saveToString());
     }
     */
-}
 
-class ColorSerializer implements JsonSerializer<Color> {
-    public JsonElement serialize(Color color, Type typeOfColor, JsonSerializationContext context){
-        return new JsonPrimitive(color.toString());
+    public static void main(String[] args) {
+        UUID uuid = UUID.randomUUID();
+        System.out.println(uuid.toString());
+        //System.out.println(new Date(uuid.timestamp()).toString());
     }
 }
 
-class ColorDeserializer implements JsonDeserializer<Color> {
-    @Override
-    public Color deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        return Color.web(jsonElement.getAsJsonPrimitive().getAsString());
-    }
-}
+
 

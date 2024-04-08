@@ -1,5 +1,7 @@
 package client.backend.models;
 
+import client.backend.serialization.ColorDeserializer;
+import client.backend.serialization.ColorSerializer;
 import com.google.gson.*;
 import com.google.gson.annotations.Expose;
 import javafx.scene.paint.Color;

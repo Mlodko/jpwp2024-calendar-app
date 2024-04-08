@@ -8,4 +8,5 @@ module client.backend {
     exports com.example.calendarapp;
     opens client.backend.models to com.google.gson;
     opens client.backend to com.google.gson;
+    opens client.backend.serialization to com.google.gson;
 }

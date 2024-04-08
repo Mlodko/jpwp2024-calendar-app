@@ -1,9 +1,18 @@
 package client.backend.models;
 
-import java.util.*;
-import java.util.function.Predicate;
-import com.google.gson.*;
+import client.backend.serialization.CardIdDeserializer;
+import client.backend.serialization.CardIdSerializer;
+import client.backend.serialization.KanbanIdDeserializer;
+import client.backend.serialization.KanbanIdSerializer;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 public class Calendar implements Savable<Calendar> {
 
@@ -13,7 +22,11 @@ public class Calendar implements Savable<Calendar> {
 
     //TODO ArrayList<User> users;
 
-    public Calendar() {    }
+    public Calendar(String id) {
+        this.id = id;
+    }
+
+    public Calendar() {}
 
     public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards) {
         this.id = id;
@@ -22,10 +35,7 @@ public class Calendar implements Savable<Calendar> {
     }
 
     public static Calendar createNew() {
-        Calendar calendar = new Calendar();
-        calendar.id = UUID.randomUUID().toString();
-
-        return calendar;
+        return new Calendar(UUID.randomUUID().toString());
     }
 
     public void setID(String newID) {
@@ -95,8 +105,8 @@ public class Calendar implements Savable<Calendar> {
     @Override
     public Calendar loadFromString(String json_text) {
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Card.class, new CardDeserializer());
-        builder.registerTypeAdapter(KanbanBoard.class, new KanbanDeserializer());
+        builder.registerTypeAdapter(Card.class, new CardIdDeserializer());
+        builder.registerTypeAdapter(KanbanBoard.class, new KanbanIdDeserializer());
         Gson gson = builder.create();
 
         return gson.fromJson(json_text, Calendar.class);
@@ -105,11 +115,12 @@ public class Calendar implements Savable<Calendar> {
     @Override
     public String saveToString() {
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Card.class, new CardSerializer());
-        builder.registerTypeAdapter(KanbanBoard.class, new KanbanSerializer());
+        builder.registerTypeAdapter(Card.class, new CardIdSerializer());
+        builder.registerTypeAdapter(KanbanBoard.class, new KanbanIdSerializer());
         Gson gson = builder.create();
 
         return gson.toJson(this);
     }
+
 }
 

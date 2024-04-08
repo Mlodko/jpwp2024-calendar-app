@@ -1,20 +1,22 @@
 package client.backend;
 
 import client.backend.models.Calendar;
-import client.backend.serialization.CalendarIdDeserializer;
-import client.backend.serialization.CalendarIdSerializer;
+import client.backend.models.Card;
+import client.backend.models.KanbanBoard;
+import client.backend.models.KanbanInsertable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
+import javafx.scene.paint.Color;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class JsonManager {
@@ -33,9 +35,7 @@ public class JsonManager {
             throw new IOException("Unable to create directory " + calendarsFile.getParentFile().getAbsolutePath());
         }
 
-        GsonBuilder bobTheBuilder = new GsonBuilder();
-        bobTheBuilder.registerTypeAdapter(Calendar.class, new CalendarIdSerializer());
-        Gson gson = bobTheBuilder.create();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 
         String json = gson.toJson(calendars);
 
@@ -50,9 +50,63 @@ public class JsonManager {
             System.err.println(e.getMessage() + "\nCouldn't write to file " + calendarsFile.getAbsolutePath());
             e.printStackTrace();
         }
+
+        for(Calendar calendar : calendars) {
+            JsonManager.writeSingleCalendarData(calendar);
+        }
     }
 
-    /*
+    private static void writeSingleCalendarData(Calendar calendar) throws IOException{
+        File currentFile = new File(rootDir.toString() + "/workspace/calendar-" + calendar.getID() + "/boards.json");
+        if(!currentFile.getParentFile().exists() && !currentFile.getParentFile().mkdirs()) {
+            throw new IOException("Unable to create directory " + currentFile.getParentFile().getAbsolutePath());
+        }
+
+        if(!currentFile.exists()) currentFile.createNewFile();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+        try(BufferedWriter writer = Files.newBufferedWriter(currentFile.toPath())) {
+            writer.write(gson.toJson(calendar.getKanbanBoards()));
+            writer.flush();
+        }
+
+        currentFile = new File(currentFile.getParent() + "/cards.json");
+        try(BufferedWriter writer = Files.newBufferedWriter(currentFile.toPath())) {
+            writer.write(gson.toJson(calendar.getOrphanCards()));
+            writer.flush();
+        }
+
+        /*
+        Path parentDir = calendarFile.getParentFile().toPath();
+        File cardsFile = new File(parentDir.toString() + "/cards.json");
+        if(!cardsFile.exists()) cardsFile.createNewFile();
+
+        Gson gson = new Gson();
+
+        try (BufferedWriter writer = Files.newBufferedWriter(cardsFile.toPath())) {
+            writer.write(gson.toJson(calendar.getKanbanIds()));
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println(e.getMessage() + "\nCouldn't write to file " + cardsFile.getAbsolutePath());
+            e.printStackTrace();
+        }
+
+        File kanbanFile = new File(parentDir.toString() + "/boards.json");
+        if(!kanbanFile.exists()) kanbanFile.createNewFile();
+
+        try (BufferedWriter writer = Files.newBufferedWriter(kanbanFile.toPath())) {
+            writer.write();
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println(e.getMessage() + "\nCouldn't write to file " + kanbanFile.getAbsolutePath());
+            e.printStackTrace();
+        }
+         */
+    }
+
+
+
+
     public static void readAllCalendarsData() throws IOException {
 
         File calendarsFile = new File(rootDir + "/workspace/calendars.json");
@@ -62,35 +116,33 @@ public class JsonManager {
         }
 
         StringBuilder resultStringBuilder = new StringBuilder();
-        try (BufferedReader br
-                     = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                resultStringBuilder.append(line).append("\n");
-            }
-        }
     }
-     */
 
-    public static void main(String[] args){
-        ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar("5189792"),
-                new Calendar("jkfnaof"),
-                new Calendar("wchodzi gej programista, przestepca, alkoholik i cpun do baru")
+    public static void main(String[] args) throws IOException{
+        ArrayList<Card> cards = new ArrayList<>(List.of(
+                new Card("21", "desc", new Date(), new Date(), new Date(), Color.RED),
+                new Card("22", "desc", new Date(), new Date(), new Date(), Color.RED),
+                new Card("23", "desc", new Date(), new Date(), new Date(), Color.RED)
+        ));
+        ArrayList<KanbanBoard> boards = new ArrayList<>(List.of(
+                new KanbanBoard("1", "twoja stara", new Date(), new Date(), new Calendar("31"), new HashMap<>()),
+                new KanbanBoard("2", "twoja stara", new Date(), new Date(), new Calendar("32"), new HashMap<>()),
+                new KanbanBoard("3", "twoja stara", new Date(), new Date(), new Calendar("33"), new HashMap<>())
         ));
 
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-
-        String json = gson.toJson(calendars);
-
-        try {
-            JsonManager.writeAllCalendarsData(calendars);
+        ArrayList<KanbanInsertable> kanbanInsertables = new ArrayList<>(cards);
+        for(KanbanBoard board: boards) {
+            board.addNewItemColumn("Column", kanbanInsertables);
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("hehe zesrałem sie ;p");
-        }
-        ArrayList<Calendar> newCals = gson.fromJson(json, ArrayList.class);
+
+        ArrayList<Calendar> calendars = new ArrayList<>(List.of(
+                new Calendar("31", cards, boards),
+                new Calendar("32", cards, boards),
+                new Calendar("33", cards, boards)
+        ));
+
+
+        JsonManager.writeAllCalendarsData(calendars);
     }
 
 }

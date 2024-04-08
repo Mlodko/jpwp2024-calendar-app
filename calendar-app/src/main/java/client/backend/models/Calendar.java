@@ -8,17 +8,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class Calendar implements Savable<Calendar> {
 
     @Expose private String id;
     private ArrayList<KanbanBoard> kanbanBoards;
+    @Expose private List<String> kanbanIds;
     private ArrayList<Card> orphanCards;
+    @Expose private List<String> orphanCardIds;
 
     //TODO ArrayList<User> users;
 
@@ -32,6 +31,8 @@ public class Calendar implements Savable<Calendar> {
         this.id = id;
         this.orphanCards = orphanCards;
         this.kanbanBoards = kanbanBoards;
+        this.orphanCardIds = orphanCards.stream().map(Card::getId).toList();
+        this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).toList();
     }
 
     public static Calendar createNew() {
@@ -50,21 +51,27 @@ public class Calendar implements Savable<Calendar> {
         return this.kanbanBoards;
     }
 
+    public List<String> getKanbanIds() {return this.kanbanIds;}
+
     public void setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
         this.kanbanBoards = newKanbanBoards;
+        this.kanbanIds = this.kanbanBoards.stream().map(KanbanBoard::getId).toList();
     }
 
     public void setKanbanBoard(KanbanBoard newSingleKanbanBoard, int index) {
         this.kanbanBoards.set(index, newSingleKanbanBoard);
+        this.kanbanIds.set(index, newSingleKanbanBoard.getId());
     }
 
     public void addToKanbanBoards(KanbanBoard board) {
         this.kanbanBoards.add(board);
+        this.kanbanIds.add(board.id);
     }
 
     public KanbanBoard[] deleteFromKanbanBoards(Predicate<KanbanBoard> filterFunction) {
         KanbanBoard[] removedBoards = this.kanbanBoards.stream().filter(filterFunction).toArray(KanbanBoard[]::new);
         this.kanbanBoards.removeIf(filterFunction);
+        this.kanbanIds = this.kanbanBoards.stream().map(KanbanBoard::getId).toList();
         return removedBoards;
     }
 
@@ -74,19 +81,23 @@ public class Calendar implements Savable<Calendar> {
 
     public void setOrphanCards(ArrayList<Card> newOrphanCards) {
         this.orphanCards = newOrphanCards;
+        this.kanbanIds = newOrphanCards.stream().map(Card::getId).toList();
     }
 
     public void setOrphanCard(Card card, int index) {
         this.orphanCards.set(index, card);
+        this.orphanCardIds.set(index, card.getId());
     }
 
     public void addToOrphanCards(Card newOrphan) {
         this.orphanCards.add(newOrphan);
+        this.orphanCardIds.add(newOrphan.getId());
     }
 
     public Card[] deleteFromOrphanCards(Predicate<Card> filterFunc) {
         Card[] removedOrphans = this.orphanCards.stream().filter(filterFunc).toArray(Card[]::new);
         this.orphanCards.removeIf(filterFunc);
+        this.orphanCardIds = orphanCards.stream().map(Card::getId).toList();
         return removedOrphans;
     }
 

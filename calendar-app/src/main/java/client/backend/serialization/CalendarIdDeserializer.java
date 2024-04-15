@@ -1,17 +1,37 @@
 package client.backend.serialization;
 
 import client.backend.models.Calendar;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import client.backend.models.Card;
+import client.backend.models.KanbanBoard;
+import com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 public class CalendarIdDeserializer implements JsonDeserializer<Calendar> {
 
     @Override
     public Calendar deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        return new Calendar(json.getAsJsonPrimitive().getAsString());
+        Calendar calendar = new Calendar();
+        JsonObject jsonObject = json.getAsJsonObject();
+        calendar.setID(jsonObject.get("id").getAsString());
+        ArrayList<KanbanBoard> boards = new ArrayList<>();
+
+        for (JsonElement boardId : jsonObject.getAsJsonArray("kanbanIds").asList()) {
+            boards.add(new KanbanBoard(boardId.getAsString()));
+        }
+
+        calendar.setKanbanBoards(boards);
+
+        ArrayList<Card> cards = new ArrayList<>();
+        for (JsonElement orphanCardId : jsonObject.getAsJsonArray("orphanCardIds").asList()) {
+            cards.add(new Card(orphanCardId.getAsString()));
+        }
+
+        calendar.setOrphanCards(cards);
+
+
+        return calendar;
     }
 }
+

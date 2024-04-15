@@ -106,31 +106,17 @@ public class Card implements Savable<Card>, KanbanInsertable {
         this.creationTime = new SimpleDateFormat().parse(newLastModifyTimeString);
     }
 
-    @Expose
-    public Color labelColor;
 
-    public Color getLabelColor() {
-        return this.labelColor;
-    }
-
-    public void setLabelColor(Color newLabelColor) {
-        this.labelColor = newLabelColor;
-    }
-
-    public void setLabelColor(String newLabelColorString) {
-        this.labelColor = Color.web(newLabelColorString);
-    }
 
 
     // other methods:
 
-    public Card(String id, String desc, Date deadline, Date creationTime, Date lastModifyTime, Color labelColor) {
+    public Card(String id, String desc, Date deadline, Date creationTime, Date lastModifyTime) {
         this.id = id;
         this.description = desc;
         this.deadline = deadline;
         this.creationTime = creationTime;
         this.lastModifyTime = lastModifyTime;
-        this.labelColor = labelColor;
     }
 
     public Card(String id) {

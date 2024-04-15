@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class KanbanBoard implements Savable<KanbanBoard> {
@@ -28,7 +29,7 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     // This is a structure that contains all "columns"/sub-lists of a kanban board
     // Title -> ArrayList<Item>
     HashMap<String, ArrayList<KanbanInsertable>> itemsLists;
-    @Expose private HashMap<String, List<String>> itemIds;
+    @Expose private HashMap<String, ArrayList<String>> itemIds;
 
     public KanbanBoard(String id) {this.id = id;}
 
@@ -43,7 +44,7 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         this.itemsLists = itemsLists;
         this.itemIds = new HashMap<>();
         itemsLists.forEach((columnTitle, items) -> {
-            itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).toList());
+            itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).collect(Collectors.toCollection(ArrayList::new)));
         });
     }
 
@@ -103,7 +104,7 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     public void setItemsLists(HashMap<String, ArrayList<KanbanInsertable>> itemsLists) {
         this.itemsLists = itemsLists;
         itemsLists.forEach((columnTitle, items) -> {
-            this.itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).toList());
+            this.itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).collect(Collectors.toCollection(ArrayList::new)));
         });
     }
 
@@ -140,7 +141,11 @@ public class KanbanBoard implements Savable<KanbanBoard> {
                     "\nTry calling addToItemsList()");
         }
         itemsLists.put(columnTitle, items);
-        itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).toList());
+        itemIds.put(columnTitle, items.stream().map(KanbanInsertable::getId).collect(Collectors.toCollection(ArrayList::new)));
+    }
+
+    public HashMap<String, ArrayList<String>> getItemIds() {
+        return this.itemIds;
     }
 
     @Override
@@ -152,4 +157,5 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     public String saveToString() {
         return new GsonBuilder().registerTypeAdapter(Card.class, new CardIdSerializer()).create().toJson(this);
     }
+
 }

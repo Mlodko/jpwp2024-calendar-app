@@ -2,6 +2,8 @@ module client.backend {
     requires javafx.controls;
     requires javafx.fxml;
     requires com.google.gson;
+    requires org.commonmark;
+    requires javafx.web;
 
 
     opens com.example.calendarapp to javafx.fxml;

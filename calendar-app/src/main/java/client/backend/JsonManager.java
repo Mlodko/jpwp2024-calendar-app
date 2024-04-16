@@ -135,10 +135,8 @@ public class JsonManager {
 
         Type calendarArrayType = new TypeToken<ArrayList<Calendar>>() {}.getType();
         Gson gson = new GsonBuilder().registerTypeAdapter(Calendar.class, new CalendarIdDeserializer()).create();
-        ArrayList<Calendar> calendars = gson.fromJson(calJson, calendarArrayType);
+        return gson.fromJson(calJson, calendarArrayType);
         // sex
-
-        return calendars;
     }
 
     private static ArrayList<KanbanBoard> readAllKanbanBoardsData(Calendar calendar) throws IOException {
@@ -165,10 +163,11 @@ public class JsonManager {
         return gson.fromJson(cardsJson, cardArrayType);
     }
 
-
+/*
     public static void main(String[] args) throws IOException{
         ArrayList<Card> cards = new ArrayList<>(List.of(
-                new Card("22", "desc", new Date(), new Date(), new Date()),
+                new Card("22", "## Zasada działania\n" +
+                        "Dyspersja \"chromatyczna\" pojawia się, bo różne częstotliwości światła (a co za tym idzie sygnały o różnych długościach fali) podróżują z różną prędkością przez światłowód. Jest charakterystyczna dla danego włókna światłowodowego, każde włókno ma swój własny *współczynnik dyspersji chromatycznej*", new Date(), new Date(), new Date()),
                 new Card("21", "desc", new Date(), new Date(), new Date()),
                 new Card("23", "desc", new Date(), new Date(), new Date())
         ));
@@ -195,7 +194,7 @@ public class JsonManager {
         ArrayList<Calendar> readCalendars = JsonManager.readAllCalendars();
         System.out.println();
     }
-
+*/
 }
 
 

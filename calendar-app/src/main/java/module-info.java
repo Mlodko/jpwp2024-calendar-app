@@ -5,6 +5,7 @@ module client.backend {
     requires org.commonmark;
     requires javafx.web;
     requires org.apache.commons.codec;
+    requires com.calendarfx.view;
 
 
     opens com.example.calendarapp to javafx.fxml;

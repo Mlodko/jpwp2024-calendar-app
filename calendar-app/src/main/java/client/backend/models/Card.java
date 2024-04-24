@@ -61,18 +61,37 @@ public class Card implements Savable<Card>, KanbanInsertable {
     }
 
     @Expose
-    private Date deadline;
+    private Date startTime;
+
+    @Expose
+    private Date endTime;
     
-    public Date getDeadline() {
-        return this.deadline;
+    public Date getEndTime() {
+        return this.endTime;
     }
 
-    public void setDeadline(Date newDeadline) {
-        this.deadline = newDeadline;
+    public void setEndTime(Date newDeadline) {
+        this.endTime = newDeadline;
     }
 
-    public void setDeadline(String newDeadlineString) throws ParseException {
-        this.deadline = new SimpleDateFormat().parse(newDeadlineString);
+    public void setEndTime(String newDeadlineString) throws ParseException {
+        this.endTime = new SimpleDateFormat().parse(newDeadlineString);
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setStartTime(String newStartTimeString) throws ParseException {
+        this.startTime = new SimpleDateFormat().parse(newStartTimeString);
+    }
+
+    public boolean hasStartAndEndDate() {
+        return this.startTime != null && this.endTime != null;
     }
 
 
@@ -111,10 +130,12 @@ public class Card implements Savable<Card>, KanbanInsertable {
 
     // other methods:
 
-    public Card(String id, String desc, Date deadline, Date creationTime, Date lastModifyTime) {
+    public Card(String id, String title, String desc, Date creationTime, Date lastModifyTime, Date startTime, Date endTime) {
         this.id = id;
+        this.title = title;
         this.description = desc;
-        this.deadline = deadline;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.creationTime = creationTime;
         this.lastModifyTime = lastModifyTime;
     }
@@ -149,7 +170,7 @@ public class Card implements Savable<Card>, KanbanInsertable {
         Card card = new Card();
         card.id = "7yrfhq3ojicf";
         card.title = "Jebać Javę";
-        card.deadline = new Date();
+        card.endTime = new Date();
         card.labelColor = Color.RED;
 
         System.out.println(card.saveToString());

@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import java.util.UUID;
@@ -20,115 +21,31 @@ import java.util.UUID;
  */
 
 
-public class Card implements Savable<Card>, KanbanInsertable {
-
+public class Card implements Savable<Card> {
     // fields with getters and setters:
+
     @Expose
     private String id;
-
-    public String getId() {
-        return this.id;
-    }
-
-    public void setID(String newID) {
-        this.id = newID;
-    }
-
     @Expose
     private String title; // not yet MD.....
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setTitle(String newTitle) {
-        this.title = newTitle;
-    }
-
-
-    // TODO ArrayList<User> assigned_idiots;
-    // TODO ArrayList<GitTask> linked_from_github;
-    // TODO [MAYBE] ArrayList<Tag> tags;
-
     @Expose
     private String description; // Markdown!! :-)))))))))))
-
-    public String getDescription() {
-        return this.description;
-    }
-    public void setDescription(String newDescription) {
-        this.description = newDescription;
-    }
-
     @Expose
     private Date startTime;
-
     @Expose
     private Date endTime;
-    
-    public Date getEndTime() {
-        return this.endTime;
-    }
-
-    public void setEndTime(Date newDeadline) {
-        this.endTime = newDeadline;
-    }
-
-    public void setEndTime(String newDeadlineString) throws ParseException {
-        this.endTime = new SimpleDateFormat().parse(newDeadlineString);
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setStartTime(String newStartTimeString) throws ParseException {
-        this.startTime = new SimpleDateFormat().parse(newStartTimeString);
-    }
-
-    public boolean hasStartAndEndDate() {
-        return this.startTime != null && this.endTime != null;
-    }
-
-
     @Expose
     private Date creationTime;
-    
-    public Date getCreationTime() {
-        return this.creationTime;
-    }
-
-    public void setCreationTime(Date newCreationTime) {
-        this.creationTime = newCreationTime;
-    }
-
-    public void setCreationTime(String newCreationTimeString) throws ParseException {
-        this.creationTime = new SimpleDateFormat().parse(newCreationTimeString);
-    }
-
     @Expose
     private Date lastModifyTime;
+    @Expose
+    private ArrayList<String> assignedUserIds;
 
-    public Date getLastModifyTime() {
-        return this.lastModifyTime;
+    private ArrayList<User> assignedUsers;
+
+    public Card(String id) {
+        this.id = id;
     }
-
-    public void setLastModifyTime(Date newLastModifyTime) {
-        this.lastModifyTime = newLastModifyTime;
-    }
-
-    public void setLastModifyTime(String newLastModifyTimeString) throws ParseException {
-        this.creationTime = new SimpleDateFormat().parse(newLastModifyTimeString);
-    }
-
-
-
-
-    // other methods:
 
     public Card(String id, String title, String desc, Date creationTime, Date lastModifyTime, Date startTime, Date endTime) {
         this.id = id;
@@ -140,9 +57,93 @@ public class Card implements Savable<Card>, KanbanInsertable {
         this.lastModifyTime = lastModifyTime;
     }
 
-    public Card(String id) {
-        this.id = id;
+    public Card() {
+        this.id = UUID.randomUUID().toString();
     }
+
+    //region Getters/setters
+    public String getId() {
+        return this.id;
+    }
+
+    public Card setID(String newID) {
+        this.id = newID;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+    public String getTitle() {
+        return this.title;
+    }
+
+    public Card setTitle(String newTitle) {
+        this.title = newTitle;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public Card setDescription(String newDescription) {
+        this.description = newDescription;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Date getEndTime() {
+        return this.endTime;
+    }
+
+    public Card setEndTime(Date newDeadline) {
+        this.endTime = newDeadline;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Card setEndTime(String newDeadlineString) throws ParseException {
+        this.endTime = new SimpleDateFormat().parse(newDeadlineString);
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public Card setStartTime(Date startTime) {
+        this.startTime = startTime;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Card setStartTime(String newStartTimeString) throws ParseException {
+        this.startTime = new SimpleDateFormat().parse(newStartTimeString);
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Date getCreationTime() {
+        return this.creationTime;
+    }
+
+    public Card setCreationTime(Date newCreationTime) {
+        this.creationTime = newCreationTime;
+        this.lastModifyTime = new Date();
+        return this;
+    }
+
+    public Date getLastModifyTime() {
+        return this.lastModifyTime;
+    }
+    //endregion
+
+    public boolean hasStartAndEndDate() {
+        return this.startTime != null && this.endTime != null;
+    }
+    // other methods:
+
+
 
 
     public Card loadFromString(String json_text) {
@@ -160,13 +161,10 @@ public class Card implements Savable<Card>, KanbanInsertable {
         return gson.toJson(this);
     }
 
-    public void display() {
-        // TODO
-        return;
-    }
+
 
     /*
-    public static void main(String[] args) {
+    public static Card main(String[] args) {
         Card card = new Card();
         card.id = "7yrfhq3ojicf";
         card.title = "Jebać Javę";

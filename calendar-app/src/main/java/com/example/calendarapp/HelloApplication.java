@@ -7,8 +7,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.text.Font;
 

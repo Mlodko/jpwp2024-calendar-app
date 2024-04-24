@@ -3,7 +3,7 @@ package client.backend;
 import client.backend.models.Calendar;
 import client.backend.models.Card;
 import client.backend.models.KanbanBoard;
-import client.backend.models.KanbanInsertable;
+import client.backend.models.Card;
 import client.backend.serialization.CalendarIdDeserializer;
 import client.backend.serialization.ColorDeserializer;
 import client.backend.serialization.ColorSerializer;
@@ -21,10 +21,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class JsonManager {
@@ -102,9 +99,9 @@ public class JsonManager {
                 KanbanBoard newBoard = calendar.getKanbanBoards().get(i);
                 newBoard.setCalendar(calendar);
 
-                HashMap<String, ArrayList<KanbanInsertable>> itemHashmap = new HashMap<>();
+                HashMap<String, ArrayList<Card>> itemHashmap = new HashMap<>();
                 newBoard.getItemIds().forEach((columnTitle, itemIdList) -> {
-                    ArrayList<KanbanInsertable> itemList = allCards.stream()
+                    ArrayList<Card> itemList = allCards.stream()
                             .filter(card -> itemIdList.contains(card.getId()))
                             .collect(Collectors.toCollection(ArrayList::new));
                     itemHashmap.put(columnTitle, itemList);
@@ -163,24 +160,24 @@ public class JsonManager {
         return gson.fromJson(cardsJson, cardArrayType);
     }
 
-/*
+
     public static void main(String[] args) throws IOException{
         ArrayList<Card> cards = new ArrayList<>(List.of(
-                new Card("22", "## Zasada działania\n" +
-                        "Dyspersja \"chromatyczna\" pojawia się, bo różne częstotliwości światła (a co za tym idzie sygnały o różnych długościach fali) podróżują z różną prędkością przez światłowód. Jest charakterystyczna dla danego włókna światłowodowego, każde włókno ma swój własny *współczynnik dyspersji chromatycznej*", new Date(), new Date(), new Date()),
-                new Card("21", "desc", new Date(), new Date(), new Date()),
-                new Card("23", "desc", new Date(), new Date(), new Date())
+                new Card("22", "Twoje stara", "## Zasada działania\n" +
+                        "Dyspersja \"chromatyczna\" pojawia się, bo różne częstotliwości światła (a co za tym idzie sygnały o różnych długościach fali) podróżują z różną prędkością przez światłowód. Jest charakterystyczna dla danego włókna światłowodowego, każde włókno ma swój własny *współczynnik dyspersji chromatycznej*", new Date(), new Date(), new Date(), getRandomDateWithin7Days()),
+                new Card("21", "Twoje stara", "desc", new Date(), new Date(), new Date(), getRandomDateWithin7Days()),
+                new Card("23", "Twoje stara", "desc", new Date(), new Date(), new Date(), getRandomDateWithin7Days())
         ));
         ArrayList<KanbanBoard> boards = new ArrayList<>(List.of(
-                new KanbanBoard("1", "twoja stara", new Date(), new Date(), new Calendar("31"), new HashMap<>()),
-                new KanbanBoard("2", "twoja stara", new Date(), new Date(), new Calendar("32"), new HashMap<>()),
-                new KanbanBoard("3", "twoja stara", new Date(), new Date(), new Calendar("33"), new HashMap<>())
+                new KanbanBoard("1", "twoja stara", new Date(), new Date(), new Calendar("31"), new Date(), getRandomDateWithin7Days(), new HashMap<>()),
+                new KanbanBoard("2", "twoja stara", new Date(), new Date(), new Calendar("32"), new Date(), getRandomDateWithin7Days(), new HashMap<>()),
+                new KanbanBoard("3", "twoja stara", new Date(), new Date(), new Calendar("33"), new Date(), getRandomDateWithin7Days(), new HashMap<>())
         ));
 
-        ArrayList<KanbanInsertable> kanbanInsertables = new ArrayList<>(cards);
-        for(KanbanBoard board: boards) {
-            board.addNewItemColumn("Column", kanbanInsertables);
-        }
+
+        ArrayList<Card> Cards = new ArrayList<>(cards);
+        boards.getFirst().addNewItemColumn("Column", Cards);
+
 
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
                 new Calendar("31", cards, boards),
@@ -194,7 +191,26 @@ public class JsonManager {
         ArrayList<Calendar> readCalendars = JsonManager.readAllCalendars();
         System.out.println();
     }
-*/
+
+    static Date getRandomDateWithin7Days() {
+        // Get the current date
+        Date currentDate = new Date();
+
+        // Create a Calendar instance and set it to the current date
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(currentDate);
+
+        // Generate a random number of milliseconds within 7 days
+        Random random = new Random();
+        long randomMillisToAdd = Math.abs(random.nextLong() % (7 * 24 * 60 * 60 * 1000));
+
+        // Add the random duration to the current date
+        calendar.add(java.util.Calendar.MILLISECOND, (int) randomMillisToAdd);
+
+        // Return the random date
+        return calendar.getTime();
+    }
+
 }
 
 

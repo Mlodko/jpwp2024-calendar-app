@@ -7,34 +7,28 @@ import com.google.gson.annotations.Expose;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
 public class KanbanBoard implements Savable<KanbanBoard> {
-
-    // TODO ArrayList<User> users; +their permissions???
-    // TODO [MAYBE] String description; ???
-
     @Expose String id;
     @Expose String title; // Not md! >:(
     @Expose Date createTime;
     @Expose Date lastModifiedTime;
-    Calendar calendar;
-    @Expose private String calendarId;
+    @Expose String calendarId;
 
-    // This is a structure that contains all "columns"/sub-lists of a kanban board
-    // Title -> ArrayList<Item>
-    HashMap<String, ArrayList<Card>> itemsLists;
-    @Expose private HashMap<String, ArrayList<String>> itemIds;
-
+    @Expose HashMap<String, ArrayList<String>> itemIds;
     @Expose Date startTime;
     @Expose Date endTime;
+    Calendar calendar;
+    HashMap<String, ArrayList<Card>> itemsLists;
+    // This is a structure that contains all "columns"/sub-lists of a kanban board
+    // Title -> ArrayList<Item>
 
     public KanbanBoard(String id) {this.id = id;}
+    
+    public KanbanBoard() {this.id = UUID.randomUUID().toString();}
 
     public KanbanBoard(String id, String title, Date createTime, Date lastModifiedTime, Calendar calendar, Date startTime,
                        Date endTime, HashMap<String, ArrayList<Card>> itemsLists) {
@@ -53,40 +47,42 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         });
     }
 
+
+    //region Getters/setters
     public String getId() {
         return this.id;
     }
 
-    public void setId(String newId) {
+    public KanbanBoard setId(String newId) {
         this.id = newId;
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public String getTitle() {
         return this.title;
     }
 
-    public void setTitle(String newTitle) {
+    public KanbanBoard setTitle(String newTitle) {
         this.title = newTitle;
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public Date getCreateTime() {
         return this.createTime;
     }
 
-    public void setCreateTime(Date newCreateTime) {
+    public KanbanBoard setCreateTime(Date newCreateTime) {
         this.createTime = newCreateTime;
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
-    public void setCreateTime(String newCreateTimeString) throws ParseException {
+    public KanbanBoard setCreateTime(String newCreateTimeString) throws ParseException {
         this.createTime = new SimpleDateFormat().parse(newCreateTimeString);
-    }
-
-    public void setLastModifiedTime(Date newLastModifiedTime) {
-        this.lastModifiedTime = newLastModifiedTime;
-    }
-
-    public void setLastModifiedTime(String newLastModifiedTime) throws ParseException {
-        this.lastModifiedTime = new SimpleDateFormat().parse(newLastModifiedTime);
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public Date getLastModifiedTime() {
@@ -97,56 +93,68 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         return calendar;
     }
 
-    public void setCalendar(Calendar calendar) {
+    public KanbanBoard setCalendar(Calendar calendar) {
         this.calendar = calendar;
         this.calendarId = calendar.getID();
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public HashMap<String, ArrayList<Card>> getItemsLists() {
         return itemsLists;
     }
 
-    public void setItemsLists(HashMap<String, ArrayList<Card>> itemsLists) {
+    public KanbanBoard setItemsLists(HashMap<String, ArrayList<Card>> itemsLists) {
         this.itemsLists = itemsLists;
+        this.lastModifiedTime = new Date();
         itemsLists.forEach((columnTitle, items) -> {
             this.itemIds.put(columnTitle, items.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new)));
         });
+        return this;
     }
 
-    public void addToItemsList(String columnTitle, Card item) throws java.util.NoSuchElementException{
+    public KanbanBoard addToItemsList(String columnTitle, Card item) throws java.util.NoSuchElementException{
         if(!itemsLists.containsKey(columnTitle)) {
             throw new java.util.NoSuchElementException("The item list with title " + columnTitle + " doesn't exist." +
                     "\nTry calling addNewItemColumn()" );
         }
         itemsLists.get(columnTitle).add(item);
         itemIds.get(columnTitle).add(item.getId());
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
-    public void addToItemsList(String columnTitle, ArrayList<Card> items) throws java.util.NoSuchElementException{
+    public KanbanBoard addToItemsList(String columnTitle, ArrayList<Card> items) throws java.util.NoSuchElementException{
         if(!itemsLists.containsKey(columnTitle)) {
             throw new java.util.NoSuchElementException("The item list with title " + columnTitle + " doesn't exist." +
                     "\nTry calling addNewItemColumn()" );
         }
         itemsLists.get(columnTitle).addAll(items);
         itemIds.get(columnTitle).addAll(items.stream().map(Card::getId).toList());
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
-    public void addNewItemColumn(String columnTitle) throws IllegalArgumentException{
+    public KanbanBoard addNewItemColumn(String columnTitle) throws IllegalArgumentException{
         if(itemsLists.containsKey(columnTitle)) {
             throw new IllegalArgumentException("The item list with title " + columnTitle + " already exists." +
                     "\nTry calling addToItemsList()");
         }
         itemsLists.put(columnTitle, new ArrayList<Card>());
         itemIds.put(columnTitle, new ArrayList<>());
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
-    public void addNewItemColumn(String columnTitle, ArrayList<Card> items) {
+    public KanbanBoard addNewItemColumn(String columnTitle, ArrayList<Card> items) {
         if (itemsLists.containsKey(columnTitle)) {
             throw new IllegalArgumentException("The item list with title " + columnTitle + " already exists." +
                     "\nTry calling addToItemsList()");
         }
         itemsLists.put(columnTitle, items);
         itemIds.put(columnTitle, items.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new)));
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public HashMap<String, ArrayList<String>> getItemIds() {
@@ -157,17 +165,22 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public KanbanBoard setStartTime(Date startTime) {
         this.startTime = startTime;
+        this.lastModifiedTime = new Date();
+        return this;
     }
 
     public Date getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Date endTime) {
+    public KanbanBoard setEndTime(Date endTime) {
         this.endTime = endTime;
+        this.lastModifiedTime = new Date();
+        return this;
     }
+    //endregion
 
     public boolean hasStartAndEndDate() {
         return this.startTime != null && this.endTime != null;

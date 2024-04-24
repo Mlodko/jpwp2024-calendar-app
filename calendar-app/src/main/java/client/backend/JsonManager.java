@@ -180,9 +180,9 @@ public class JsonManager {
 
 
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar("31", cards, boards),
-                new Calendar("32", cards, boards),
-                new Calendar("33", cards, boards)
+                new Calendar("31", cards, boards, new ArrayList<>()),
+                new Calendar("32", cards, boards, new ArrayList<>()),
+                new Calendar("33", cards, boards, new ArrayList<>())
         ));
 
 

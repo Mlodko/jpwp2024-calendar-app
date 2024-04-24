@@ -16,9 +16,11 @@ public class Workspace implements Savable<Workspace>{
     String description;
     @Expose
     ArrayList<String> calendarIds;
-
+    @Expose
+    ArrayList<String> memberIds;
 
     ArrayList<Calendar> calendars;
+    ArrayList<User> members;
 
     static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
@@ -88,6 +90,16 @@ public class Workspace implements Savable<Workspace>{
     public Workspace addToCalendars(Calendar calendar) {
         this.calendars.add(calendar);
         this.calendarIds.add(calendar.getID());
+        return this;
+    }
+
+    public ArrayList<User> getMembers() {
+        return members;
+    }
+
+    public Workspace setMembers(ArrayList<User> members) {
+        this.members = members;
+        this.memberIds = members.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
         return this;
     }
 

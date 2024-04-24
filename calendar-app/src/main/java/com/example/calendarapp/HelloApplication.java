@@ -12,6 +12,9 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -37,7 +40,12 @@ public class HelloApplication extends Application {
             calendarView.getCalendarSources().add(source);
         }
 
-        Scene scene = new Scene(calendarView, 1280, 720);
+        SplitPane splitPane = new SplitPane();
+        AnchorPane leftPane = new AnchorPane();
+        leftPane.getChildren().add(new Label("Switch section here"));
+        splitPane.getItems().addAll(leftPane, calendarView);
+
+        Scene scene = new Scene(splitPane, 1280, 720);
         //scene.getStylesheets().add(LoginView.class.getResource("login-view.css").toExternalForm());
         stage.setTitle("Hello!");
         stage.setScene(scene);

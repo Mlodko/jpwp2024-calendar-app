@@ -20,28 +20,36 @@ public class Calendar implements Savable<Calendar> {
     private ArrayList<Card> orphanCards;
     @Expose private ArrayList<String> orphanCardIds;
 
+    private ArrayList<User> members;
+
+    @Expose private ArrayList<String> memberIds;
+
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+
     //TODO ArrayList<User> users;
 
     public Calendar(String id) {
         this.id = id;
     }
 
-    public Calendar() {}
+    public Calendar() {
+        this.id = UUID.randomUUID().toString();
+    }
 
-    public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards) {
+    public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards, ArrayList<User> members) {
         this.id = id;
         this.orphanCards = orphanCards;
         this.kanbanBoards = kanbanBoards;
         this.orphanCardIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
+        this.members = members;
+        this.memberIds = members.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public static Calendar createNew() {
-        return new Calendar(UUID.randomUUID().toString());
-    }
-
-    public void setID(String newID) {
+    //region Getters/setters
+    public Calendar setID(String newID) {
         this.id = newID;
+        return this;
     }
 
     public String getID() {
@@ -54,19 +62,22 @@ public class Calendar implements Savable<Calendar> {
 
     public List<String> getKanbanIds() {return this.kanbanIds;}
 
-    public void setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
+    public Calendar setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
         this.kanbanBoards = newKanbanBoards;
         this.kanbanIds = this.kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
+        return this;
     }
 
-    public void setKanbanBoard(KanbanBoard newSingleKanbanBoard, int index) {
+    public Calendar setKanbanBoard(KanbanBoard newSingleKanbanBoard, int index) {
         this.kanbanBoards.set(index, newSingleKanbanBoard);
         this.kanbanIds.set(index, newSingleKanbanBoard.getId());
+        return this;
     }
 
-    public void addToKanbanBoards(KanbanBoard board) {
+    public Calendar addToKanbanBoards(KanbanBoard board) {
         this.kanbanBoards.add(board);
         this.kanbanIds.add(board.id);
+        return this;
     }
 
     public KanbanBoard[] deleteFromKanbanBoards(Predicate<KanbanBoard> filterFunction) {
@@ -80,19 +91,22 @@ public class Calendar implements Savable<Calendar> {
         return this.orphanCards;
     }
 
-    public void setOrphanCards(ArrayList<Card> newOrphanCards) {
+    public Calendar setOrphanCards(ArrayList<Card> newOrphanCards) {
         this.orphanCards = newOrphanCards;
         this.orphanCardIds = newOrphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
+        return this;
     }
 
-    public void setOrphanCard(Card card, int index) {
+    public Calendar setOrphanCard(Card card, int index) {
         this.orphanCards.set(index, card);
         this.orphanCardIds.set(index, card.getId());
+        return this;
     }
 
-    public void addToOrphanCards(Card newOrphan) {
+    public Calendar addToOrphanCards(Card newOrphan) {
         this.orphanCards.add(newOrphan);
         this.orphanCardIds.add(newOrphan.getId());
+        return this;
     }
 
     public Card[] deleteFromOrphanCards(Predicate<Card> filterFunc) {
@@ -113,24 +127,15 @@ public class Calendar implements Savable<Calendar> {
         }
         return true;
     }
+    //endregion
 
     @Override
     public Calendar loadFromString(String json_text) {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Card.class, new CardIdDeserializer());
-        builder.registerTypeAdapter(KanbanBoard.class, new KanbanIdDeserializer());
-        Gson gson = builder.create();
-
         return gson.fromJson(json_text, Calendar.class);
     }
 
     @Override
     public String saveToString() {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Card.class, new CardIdSerializer());
-        builder.registerTypeAdapter(KanbanBoard.class, new KanbanIdSerializer());
-        Gson gson = builder.create();
-
         return gson.toJson(this);
     }
 

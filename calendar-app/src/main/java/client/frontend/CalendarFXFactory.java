@@ -1,4 +1,4 @@
-package client.frontend;
+ package client.frontend;
 
 import client.backend.models.Card;
 import client.backend.models.KanbanBoard;
@@ -21,6 +21,7 @@ public abstract class CalendarFXFactory {
         // Add all kanbans from myCalendar as entries
         Calendar kanbanCalendar = new Calendar("Kanban Boards");
         kanbanCalendar.setStyle(Calendar.Style.STYLE1);
+
         ArrayList<Entry> kanbanEntries = myCalendar.getKanbanBoards().stream()
             .filter(KanbanBoard::hasStartAndEndDate)
             .map(kanbanBoard -> {
@@ -30,12 +31,14 @@ public abstract class CalendarFXFactory {
                     ZoneId.systemDefault());
                 return new Entry(kanbanBoard.getTitle(), interval);
         }).collect(Collectors.toCollection(ArrayList::new));
+
         kanbanCalendar.addEntries(kanbanEntries);
 
         // Add all cards from calendar's kanbans
         Calendar cardCalendar = new Calendar("Cards");
         cardCalendar.setStyle(Calendar.Style.STYLE2);
         ArrayList<Entry> cardEntries = new ArrayList<>();
+
         for(KanbanBoard board : myCalendar.getKanbanBoards()) {
             cardEntries.addAll(board.getItemsLists().values().stream().flatMap(Collection::stream)
                 .filter(Card::hasStartAndEndDate)
@@ -61,6 +64,7 @@ public abstract class CalendarFXFactory {
                     return new Entry(card.getTitle(), interval);
                 }).collect(Collectors.toCollection(ArrayList::new))
         );
+
         cardCalendar.addEntries(cardEntries);
 
         source.getCalendars().add(kanbanCalendar);

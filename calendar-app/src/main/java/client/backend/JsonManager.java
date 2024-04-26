@@ -28,7 +28,6 @@ public class JsonManager {
 
     private final static Path rootDir = Paths.get("").toAbsolutePath();
 
-
     public static String getRootDirectory() {
         return rootDir.toString();
     }
@@ -174,17 +173,14 @@ public class JsonManager {
                 new KanbanBoard("3", "twoja stara", new Date(), new Date(), new Calendar("33"), new Date(), getRandomDateWithin7Days(), new HashMap<>())
         ));
 
-
         ArrayList<Card> Cards = new ArrayList<>(cards);
         boards.getFirst().addNewItemColumn("Column", Cards);
-
 
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
                 new Calendar("31", cards, boards, new ArrayList<>()),
                 new Calendar("32", cards, boards, new ArrayList<>()),
                 new Calendar("33", cards, boards, new ArrayList<>())
         ));
-
 
         JsonManager.writeAllCalendarsData(calendars);
 

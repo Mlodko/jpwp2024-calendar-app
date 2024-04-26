@@ -4,26 +4,28 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
+import java.util.ArrayList;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.UUID;
 
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 
 public class User implements Savable<User>{
 
-    @Expose
-    String id;
-
-    @Expose
-    String username;
-    @Expose
-    String passwordHash;
-    @Expose
-    String email;
-
+    @Expose String id;
+    @Expose String username;
+    @Expose String passwordHash;
+    @Expose String email;
     String password;
+
+    ArrayList<Calendar> userCalendars = new ArrayList<>();
+
     static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     // TODO permissions
+
+    protected User() { }
 
     public User(String id, String username, String password, String email) {
         this.id = id;
@@ -83,5 +85,21 @@ public class User implements Savable<User>{
     @Override
     public String saveToString() {
         return gson.toJson(this);
+    }
+
+    public static void main(String[] args) {
+        File file = new File("workspace/papaj.json");
+        String papaj = "";
+
+        try {
+            papaj = Files.readString(file.toPath());
+            System.out.println(papaj);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        User usr = new User().loadFromString(papaj);
+        System.out.println("usernam: " + usr.username);
     }
 }

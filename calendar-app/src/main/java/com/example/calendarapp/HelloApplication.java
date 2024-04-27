@@ -45,7 +45,6 @@ public class HelloApplication extends Application {
             calendarView.getCalendarSources().add(source);
         }
 
-
         SplitPane splitPane = new SplitPane();
         splitPane.getItems().addAll(calendarView);
 

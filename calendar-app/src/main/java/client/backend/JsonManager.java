@@ -85,6 +85,10 @@ public class JsonManager {
     public static ArrayList<Calendar> readAllCalendars() throws IOException {
         ArrayList<Calendar> calendars = JsonManager.readAllCalendarsIdData();
 
+        if (calendars.isEmpty()) {
+            return calendars;
+        }
+
         for (Calendar calendar : calendars) {
             ArrayList<KanbanBoard> allBoards = JsonManager.readAllKanbanBoardsData(calendar);
             ArrayList<Card> allCards = JsonManager.readAllCardsData(calendar);
@@ -122,8 +126,14 @@ public class JsonManager {
     private static ArrayList<Calendar> readAllCalendarsIdData() throws IOException {
         File calendarsFile = new File(rootDir + "/workspace/calendars.json");
 
-        if(!calendarsFile.getParentFile().mkdirs() && !calendarsFile.exists()) {
+        /*
+        if(!calendarsFile.getParentFile().mkdirs()) {
             throw new IOException("Unable to create directory " + calendarsFile.getParentFile().getAbsolutePath());
+        }
+        */
+
+        if (!calendarsFile.exists()) {
+            return new ArrayList<Calendar>();
         }
 
         String calJson = new String(Files.readAllBytes(calendarsFile.toPath()));
@@ -131,19 +141,34 @@ public class JsonManager {
 
         Type calendarArrayType = new TypeToken<ArrayList<Calendar>>() {}.getType();
         Gson gson = new GsonBuilder().registerTypeAdapter(Calendar.class, new CalendarIdDeserializer()).create();
+
         return gson.fromJson(calJson, calendarArrayType);
         // sex
     }
 
     private static ArrayList<KanbanBoard> readAllKanbanBoardsData(Calendar calendar) throws IOException {
+
         File boardsFile = new File(rootDir + "/workspace/calendar-" + calendar.getID() + "/boards.json");
-        if(!boardsFile.getParentFile().mkdirs() && !boardsFile.exists()) {
+
+        /*
+        if(!boardsFile.getParentFile().mkdirs()) {
             throw new IOException("Unable to create directory " + boardsFile.getParentFile().getAbsolutePath());
         }
+        */
+
+        if (!boardsFile.exists()) {
+            return new ArrayList<KanbanBoard>();
+        }
+
         String boardsJson = new String(Files.readAllBytes(boardsFile.toPath()));
+
+        if (boardsJson.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         Type boardArrayType = new TypeToken<ArrayList<KanbanBoard>>() {}.getType();
         Gson gson = new GsonBuilder().create();
+
         return gson.fromJson(boardsJson, boardArrayType);
     }
 
@@ -185,7 +210,10 @@ public class JsonManager {
         JsonManager.writeAllCalendarsData(calendars);
 
         ArrayList<Calendar> readCalendars = JsonManager.readAllCalendars();
-        System.out.println();
+
+        for (Calendar cal : readCalendars) {
+            System.out.println("read id: " + cal.getID());
+        }
     }
 
     static Date getRandomDateWithin7Days() {

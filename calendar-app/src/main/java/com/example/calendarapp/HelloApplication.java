@@ -40,6 +40,9 @@ public class HelloApplication extends Application {
         // TODO if there are no calendars available, the app will crash :)
         ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readAllCalendars();
 
+        // Delete default calendar source
+        calendarView.getCalendarSources().clear();
+
         for(client.backend.models.Calendar calendar : myCalendars) {
             CalendarSource source = CalendarFXFactory.create(calendar);
             calendarView.getCalendarSources().add(source);
@@ -51,7 +54,7 @@ public class HelloApplication extends Application {
         Scene scene = new Scene(splitPane, 1280, 720);
         //scene.getStylesheets().add(LoginView.class.getResource("login-view.css").toExternalForm());
         stage.setTitle("Hello!");
-        stage.setScene(scene);
+        stage.setScene(LoginView.createScene());
         stage.show();
     }
 

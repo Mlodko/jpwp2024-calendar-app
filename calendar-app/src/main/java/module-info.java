@@ -6,6 +6,10 @@ module client.backend {
     requires javafx.web;
     requires org.apache.commons.codec;
     requires com.calendarfx.view;
+    requires org.eclipse.jetty.http;
+    requires org.eclipse.jetty.server;
+    requires org.eclipse.jetty.io;
+    requires javax.servlet.api;
 
 
     opens com.example.calendarapp to javafx.fxml;

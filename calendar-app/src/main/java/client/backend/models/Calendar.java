@@ -60,7 +60,7 @@ public class Calendar implements Savable<Calendar> {
         return this.kanbanBoards;
     }
 
-    public List<String> getKanbanIds() {return this.kanbanIds;}
+    public List<String> getKanbanIds() { return this.kanbanIds; }
 
     public Calendar setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
         this.kanbanBoards = newKanbanBoards;

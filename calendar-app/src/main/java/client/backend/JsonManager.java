@@ -1,8 +1,7 @@
 package client.backend;
 
+import client.backend.models.*;
 import client.backend.models.Calendar;
-import client.backend.models.Card;
-import client.backend.models.KanbanBoard;
 import client.backend.models.Card;
 import client.backend.serialization.CalendarIdDeserializer;
 import client.backend.serialization.ColorDeserializer;
@@ -182,6 +181,32 @@ public class JsonManager {
         Type cardArrayType = new TypeToken<ArrayList<Card>>() {}.getType();
         Gson gson = new GsonBuilder().registerTypeAdapter(Color.class, new ColorDeserializer()).create();
         return gson.fromJson(cardsJson, cardArrayType);
+    }
+
+    public static ArrayList<User> readAllUserData() throws IOException {
+
+        File usersFile = new File(rootDir + "/workspace/users.json");
+
+        if(!usersFile.exists()) {
+            return new ArrayList<>();
+        }
+
+        String usersJson = new String(Files.readAllBytes(usersFile.toPath()));
+        Type userArrayType = new TypeToken<ArrayList<User>>() {}.getType();
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+
+        return gson.fromJson(usersJson, userArrayType);
+    }
+
+    public static void writeAllUserData(ArrayList<User> users) throws IOException {
+
+        File usersFile = new File(rootDir + "/workspace/users.json");
+
+        if (!usersFile.exists()) {
+            usersFile.createNewFile();
+        }
+
+        //String userJson = users.
     }
 
 

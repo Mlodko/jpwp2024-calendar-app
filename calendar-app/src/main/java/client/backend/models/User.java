@@ -1,5 +1,6 @@
 package client.backend.models;
 
+import client.backend.RequestManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
@@ -7,6 +8,7 @@ import com.google.gson.annotations.Expose;
 import java.util.ArrayList;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
@@ -35,11 +37,16 @@ public class User implements Savable<User>{
         this.passwordHash = sha256Hex(password);
     }
 
-    public User(String username, String password, String email) {
+    public User(String username, String passwordHash, String email) {
         this.id = UUID.randomUUID().toString();
         this.username = username;
-        this.password = password;
         this.email = email;
+        this.passwordHash = passwordHash;
+    }
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
         this.passwordHash = sha256Hex(password);
     }
 
@@ -77,6 +84,26 @@ public class User implements Savable<User>{
     }
     //endregion
 
+    //region Logging in/registering
+
+    public static User login(String username, String password) throws Exception {
+        RequestManager manager = new RequestManager();
+        User temp = new User(username, password);
+        Optional<User> loggedInUser = manager.makeLoginRequest(temp);
+
+        return loggedInUser.map(user -> user.setPassword(password)).orElse(null);
+    }
+
+    public static User register(String username, String password, String email) throws Exception {
+        RequestManager manager = new RequestManager();
+        User temp = new User(username, sha256Hex(password), email);
+        Optional<User> registeredUser = manager.makeRegisterRequest(temp);
+
+        return registeredUser.map(user -> user.setPassword(password)).orElse(null);
+    }
+
+    //endregion
+
     @Override
     public User loadFromString(String json_text) {
         return gson.fromJson(json_text, User.class);
@@ -87,19 +114,8 @@ public class User implements Savable<User>{
         return gson.toJson(this);
     }
 
-    public static void main(String[] args) {
-        File file = new File("workspace/papaj.json");
-        String papaj = "";
-
-        try {
-            papaj = Files.readString(file.toPath());
-            System.out.println(papaj);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        User usr = new User().loadFromString(papaj);
-        System.out.println("usernam: " + usr.username);
+    public static void main(String[] args) throws Exception {
+        User user = User.register("mam", "dosc", "javy");
+        return;
     }
 }

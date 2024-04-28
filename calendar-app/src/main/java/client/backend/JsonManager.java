@@ -226,10 +226,12 @@ public class JsonManager {
         ArrayList<Card> Cards = new ArrayList<>(cards);
         boards.getFirst().addNewItemColumn("Column", Cards);
 
+        Workspace workspace = new Workspace("Test workspace", "Description");
+
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar("31", cards, boards, new ArrayList<>()),
-                new Calendar("32", cards, boards, new ArrayList<>()),
-                new Calendar("33", cards, boards, new ArrayList<>())
+                new Calendar("31", cards, boards, new ArrayList<>(), workspace),
+                new Calendar("32", cards, boards, new ArrayList<>(), workspace),
+                new Calendar("33", cards, boards, new ArrayList<>(), workspace)
         ));
 
         JsonManager.writeAllCalendarsData(calendars);

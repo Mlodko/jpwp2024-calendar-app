@@ -24,7 +24,11 @@ public class Calendar implements Savable<Calendar> {
 
     @Expose private ArrayList<String> memberIds;
 
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    private Workspace workspace;
+
+    @Expose private String workspaceId;
+
+    private final static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     //TODO ArrayList<User> users;
 
@@ -36,7 +40,7 @@ public class Calendar implements Savable<Calendar> {
         this.id = UUID.randomUUID().toString();
     }
 
-    public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards, ArrayList<User> members) {
+    public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards, ArrayList<User> members, Workspace workspace) {
         this.id = id;
         this.orphanCards = orphanCards;
         this.kanbanBoards = kanbanBoards;
@@ -44,6 +48,8 @@ public class Calendar implements Savable<Calendar> {
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         this.members = members;
         this.memberIds = members.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
+        this.workspace = workspace;
+        this.workspaceId = workspace.getId();
     }
 
     //region Getters/setters
@@ -126,6 +132,27 @@ public class Calendar implements Savable<Calendar> {
             return false;
         }
         return true;
+    }
+
+    public ArrayList<User> getMembers() {
+        return members;
+    }
+
+    public Calendar setMembers(ArrayList<User> members) {
+        this.members = members;
+        this.memberIds = members.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
+        return this;
+    }
+
+    public Workspace getWorkspace() {
+        return this.workspace;
+    }
+
+    public Calendar setWorkspace(Workspace workspace) {
+        workspace.addToCalendars(this);
+        this.workspace = workspace;
+        this.workspaceId = workspace.getId();
+        return this;
     }
     //endregion
 

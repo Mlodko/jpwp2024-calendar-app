@@ -5,24 +5,25 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Workspace implements Savable<Workspace>{
     @Expose
-    String id;
+    private String id;
     @Expose
-    String name;
+    private String name;
     @Expose
-    String description;
+    private String description;
     @Expose
-    ArrayList<String> calendarIds;
+    private ArrayList<String> calendarIds;
     @Expose
-    ArrayList<String> memberIds;
+    private ArrayList<String> memberIds;
 
-    ArrayList<Calendar> calendars;
-    ArrayList<User> members;
+    private ArrayList<Calendar> calendars;
+    private ArrayList<User> members;
 
-    static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    private final static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     public Workspace(String id, String name, String description, ArrayList<Calendar> calendars) {
         this.id = id;
@@ -38,6 +39,16 @@ public class Workspace implements Savable<Workspace>{
         this.calendarIds = calendarIds;
         this.description = description;
         this.calendars = new ArrayList<>();
+    }
+
+    public Workspace(String name, String description) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.description = description;
+        this.calendars = new ArrayList<>();
+        this.calendarIds = new ArrayList<>();
+        this.members = new ArrayList<>();
+        this.memberIds = new ArrayList<>();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package server;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.io.Content.Chunk;
 import org.eclipse.jetty.http.*;
@@ -18,6 +20,8 @@ import javax.servlet.http.*;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,6 +46,9 @@ public class MainServer {
         ContextHandlerCollection contextCollection = new ContextHandlerCollection();
 
         contextCollection.addHandler(new ContextHandler(new CardHandler(), "/chuj"));
+        contextCollection.addHandler(new ContextHandler(new LoginHandler(), "/login"));
+        contextCollection.addHandler(new ContextHandler(new RegisterHandler(), "/register"));
+
 
         server.setHandler(contextCollection);
         /*
@@ -103,6 +110,99 @@ class CardHandler extends Handler.Abstract {
                 callback.succeeded();
             }
         }
+        return true;
+    }
+}
+
+class LoginHandler extends Handler.Abstract {
+
+    Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    UserManager manager = new UserManager();
+    @Override
+    public boolean handle(Request request, Response response, Callback callback) {
+
+        if(!request.getMethod().equals("POST")) {
+            response.setStatus(400); // Bad request https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+            callback.succeeded();
+            return true;
+        }
+
+        // Read data
+        String requestJson = null;
+        try {
+            requestJson = Content.Source.asString(request);
+            if(requestJson == null) {
+                throw new IOException();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.setStatus(400); // Bad request https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+            callback.succeeded();
+            return true;
+        }
+
+        User requestUser = gson.fromJson(requestJson, User.class);
+
+        Optional<User> loggedInUser = manager.authenticateUser(requestUser.getUsername(), requestUser.getPasswordHash());
+
+        if(loggedInUser.isEmpty()) {
+            response.setStatus(401); // Unauthorized, bad credentials https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+            callback.succeeded();
+            return true;
+        }
+
+        String userJson = gson.toJson(loggedInUser.get());
+        response.setStatus(200); // OK, successfully logged in
+
+        response.write(true, StandardCharsets.UTF_8.encode(userJson), callback);
+        callback.succeeded();
+        return true;
+
+    }
+}
+
+class RegisterHandler extends Handler.Abstract {
+
+    Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    UserManager manager = new UserManager();
+
+    @Override
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+        if(!request.getMethod().equals("POST")) {
+            response.setStatus(400); // Bad request https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+            callback.succeeded();
+            return true;
+        }
+        // Read data
+        String requestJson = null;
+        try {
+            requestJson = Content.Source.asString(request);
+            if(requestJson == null) {
+                throw new IOException();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.setStatus(400); // Bad request https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+            callback.succeeded();
+            return true;
+        }
+
+
+        User requestUser = gson.fromJson(requestJson, User.class);
+
+        Optional<User> registeredUser = manager.registerUser(requestUser.getUsername(), requestUser.getPasswordHash(), requestUser.getEmail());
+
+        if(registeredUser.isEmpty()) {
+            response.setStatus(409); // Conflict, user with given username exists
+            callback.succeeded();
+            return true;
+        }
+
+        String registeredUserJson = gson.toJson(registeredUser.get());
+        response.setStatus(200); // OK, user registered
+
+        response.write(true, StandardCharsets.UTF_8.encode(registeredUserJson), callback);
+        callback.succeeded();
         return true;
     }
 }

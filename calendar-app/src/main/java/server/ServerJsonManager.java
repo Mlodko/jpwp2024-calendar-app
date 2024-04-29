@@ -1,6 +1,7 @@
 package server;
 
 import client.backend.models.Calendar;
+import client.backend.models.Card;
 import client.backend.models.User;
 import client.backend.models.Workspace;
 import client.backend.serialization.ColorSerializer;
@@ -8,7 +9,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import javafx.scene.paint.Color;
-import org.eclipse.jetty.util.IO;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +18,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ServerJsonManager {
     private final static Path rootDir = Path.of(Paths.get("").toAbsolutePath() + "/server");
@@ -72,6 +74,32 @@ public class ServerJsonManager {
          currentFile = new File(currentFile.getParent() + "/cards.json");
          try(BufferedWriter writer = Files.newBufferedWriter(currentFile.toPath())) {
              writer.write(gson.toJson(calendar.getOrphanCards()));
+             writer.flush();
+         }
+     }
+
+     private static void writeKanbanData (Calendar calendar) throws IOException {
+
+         File calendarFile = new File(rootDir.toString() + "/workspace-" + calendar.getWorkspace().getId() +
+                                        "/calendar-" + calendar.getID() +
+                                        "/boards.json");
+
+         if(!calendarFile.getParentFile().exists() && !calendarFile.getParentFile().mkdirs()) {
+             throw new IOException("Unable to create directory " + calendarFile.getParentFile().getAbsolutePath());
+         }
+
+         if(!calendarFile.exists())
+             calendarFile.createNewFile();
+
+         ArrayList<Card> cards = calendar.getKanbanBoards().stream().map(kanbanBoard -> kanbanBoard.getItemsLists().values())
+                 .flatMap(Collection::stream)
+                 .flatMap(ArrayList::stream)
+                 .collect(Collectors.toCollection(ArrayList::new));
+
+         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+
+         try(BufferedWriter writer = Files.newBufferedWriter(calendarFile.toPath())) {
+             writer.write(gson.toJson(calendar.getKanbanBoards()));
              writer.flush();
          }
      }

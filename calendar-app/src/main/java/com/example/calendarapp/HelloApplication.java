@@ -54,7 +54,7 @@ public class HelloApplication extends Application {
         Scene scene = new Scene(splitPane, 1280, 720);
         //scene.getStylesheets().add(LoginView.class.getResource("login-view.css").toExternalForm());
         stage.setTitle("Hello!");
-        stage.setScene(LoginView.createScene());
+        stage.setScene(new LoginView().createLoginScene());
         stage.show();
     }
 

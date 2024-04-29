@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.io.File;
 import java.nio.file.Files;
@@ -20,6 +21,8 @@ public class User implements Savable<User>{
     @Expose String passwordHash;
     @Expose String email;
     String password;
+
+    public static final User NULL_OBJECT = new User();
 
     ArrayList<Calendar> userCalendars = new ArrayList<>();
 
@@ -86,20 +89,26 @@ public class User implements Savable<User>{
 
     //region Logging in/registering
 
-    public static User login(String username, String password) throws Exception {
-        RequestManager manager = new RequestManager();
-        User temp = new User(username, password);
-        Optional<User> loggedInUser = manager.makeLoginRequest(temp);
+    public static Optional<User> login(String username, String password) throws Exception {
+        Optional<User> loggedInUser;
 
-        return loggedInUser.map(user -> user.setPassword(password)).orElse(null);
+        try(RequestManager manager = new RequestManager()) {
+            User temp = new User(username, password);
+            loggedInUser = manager.makeLoginRequest(temp);
+        }
+
+        return loggedInUser.map(user -> user.setPassword(password));
     }
 
-    public static User register(String username, String password, String email) throws Exception {
-        RequestManager manager = new RequestManager();
-        User temp = new User(username, sha256Hex(password), email);
-        Optional<User> registeredUser = manager.makeRegisterRequest(temp);
+    public static Optional<User> register(String username, String password, String email) throws Exception {
+        Optional<User> registeredUser;
 
-        return registeredUser.map(user -> user.setPassword(password)).orElse(null);
+        try(RequestManager manager = new RequestManager()) {
+            User temp = new User(username, sha256Hex(password), email);
+            registeredUser = manager.makeRegisterRequest(temp);
+        }
+
+        return registeredUser.map(user -> user.setPassword(password));
     }
 
     //endregion
@@ -115,7 +124,6 @@ public class User implements Savable<User>{
     }
 
     public static void main(String[] args) throws Exception {
-        User user = User.register("mam", "dosc", "javy");
-        return;
+        Optional<User> user = User.register("1", "2", "3");
     }
 }

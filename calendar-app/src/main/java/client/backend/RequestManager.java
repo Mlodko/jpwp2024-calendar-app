@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -22,8 +23,10 @@ import java.util.stream.Collectors;
 
 public class RequestManager implements AutoCloseable {
 
-    private static final String IP_ADDR = "127.0.0.1:8080";
+    private static final String IP_ADDR = "127.0.0.1";
+    private static final int PORT = 8080;
 
+    private static final String SERVER_URL = "http://" + IP_ADDR + ":" + PORT;
     private final HttpClient httpClient;
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
     public RequestManager() throws Exception {
@@ -34,7 +37,7 @@ public class RequestManager implements AutoCloseable {
     public Optional<User> makeLoginRequest(User user) {
         Optional<User> loggedInUser = Optional.empty();
         InputStreamResponseListener listener = new InputStreamResponseListener();
-        httpClient.POST("http://" + IP_ADDR + "/login/")
+        httpClient.POST(SERVER_URL + "/login/")
                 .body(new StringRequestContent("application/json", gson.toJson(user)))
                 .send(listener);
         try {
@@ -67,7 +70,7 @@ public class RequestManager implements AutoCloseable {
     public Optional<User> makeRegisterRequest(User temp) {
         Optional<User> loggedInUser = Optional.empty();
         InputStreamResponseListener listener = new InputStreamResponseListener();
-        httpClient.POST("http://" + IP_ADDR + "/register/")
+        httpClient.POST(SERVER_URL + "/register/")
                 .body(new StringRequestContent("application/json", gson.toJson(temp)))
                 .send(listener);
         try {

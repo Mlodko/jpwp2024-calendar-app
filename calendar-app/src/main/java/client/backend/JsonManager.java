@@ -23,6 +23,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
+
 public class JsonManager {
 
     private final static Path rootDir = Paths.get("").toAbsolutePath();
@@ -183,67 +185,44 @@ public class JsonManager {
         return gson.fromJson(cardsJson, cardArrayType);
     }
 
-    public static ArrayList<User> readAllUserData() throws IOException {
 
-        File usersFile = new File(rootDir + "/workspace/users.json");
-
-        if(!usersFile.exists()) {
-            return new ArrayList<>();
-        }
-
-        String usersJson = new String(Files.readAllBytes(usersFile.toPath()));
-        Type userArrayType = new TypeToken<ArrayList<User>>() {}.getType();
-        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
-
-        return gson.fromJson(usersJson, userArrayType);
-    }
-
-    public static void writeAllUserData(ArrayList<User> users) throws IOException {
-
-        File usersFile = new File(rootDir + "/workspace/users.json");
-
-        if (!usersFile.exists()) {
-            usersFile.createNewFile();
-        }
-
-        //String userJson = users.
-    }
 
 
     public static void main(String[] args) throws IOException{
         ArrayList<Card> cards = new ArrayList<>(List.of(
-                new Card("22", "Twoje stara", "## Zasada działania\n" +
-                        "Dyspersja \"chromatyczna\" pojawia się, bo różne częstotliwości światła (a co za tym idzie sygnały o różnych długościach fali) podróżują z różną prędkością przez światłowód. Jest charakterystyczna dla danego włókna światłowodowego, każde włókno ma swój własny *współczynnik dyspersji chromatycznej*", new Date(), new Date(), new Date(), getRandomDateWithin7Days()),
-                new Card("21", "Twoje stara", "desc", new Date(), new Date(), new Date(), getRandomDateWithin7Days()),
-                new Card("23", "Twoje stara", "desc", new Date(), new Date(), new Date(), getRandomDateWithin7Days())
+                new Card("Card 1", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
+                new Card("Card 2", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
+                new Card("Card 3", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
         ));
         ArrayList<KanbanBoard> boards = new ArrayList<>(List.of(
-                new KanbanBoard("1", "twoja stara", new Date(), new Date(), new Calendar("31"), new Date(), getRandomDateWithin7Days(), new HashMap<>()),
-                new KanbanBoard("2", "twoja stara", new Date(), new Date(), new Calendar("32"), new Date(), getRandomDateWithin7Days(), new HashMap<>()),
-                new KanbanBoard("3", "twoja stara", new Date(), new Date(), new Calendar("33"), new Date(), getRandomDateWithin7Days(), new HashMap<>())
+                new KanbanBoard("Board 1", "desc", new Date(), new Date(), new Calendar(), getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1), new HashMap<>())
+        ));
+        boards.get(0).addNewItemColumn("Column 1", cards);
+
+        ArrayList<Card> orphanCards = new ArrayList<>(List.of(
+                new Card("Card 4", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
+                new Card("Card 5", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
+                new Card("Card 6", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
         ));
 
-        ArrayList<Card> Cards = new ArrayList<>(cards);
-        boards.getFirst().addNewItemColumn("Column", Cards);
+        ArrayList<User> users = new ArrayList<>(List.of(
+                new User("User1", sha256Hex("password123"), "test@agh.edu.pl")
+        ));
 
         Workspace workspace = new Workspace("Test workspace", "Description");
+        workspace.setMembers(users);
 
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar("31", cards, boards, new ArrayList<>(), workspace),
-                new Calendar("32", cards, boards, new ArrayList<>(), workspace),
-                new Calendar("33", cards, boards, new ArrayList<>(), workspace)
+                new Calendar(orphanCards, boards, users, workspace)
         ));
 
+        workspace.setCalendars(calendars);
+        boards.get(0).setCalendar(calendars.get(0));
+
         JsonManager.writeAllCalendarsData(calendars);
-
-        ArrayList<Calendar> readCalendars = JsonManager.readAllCalendars();
-
-        for (Calendar cal : readCalendars) {
-            System.out.println("read id: " + cal.getID());
-        }
     }
 
-    static Date getRandomDateWithin7Days() {
+    static Date getRandomDateWithin7Days(long multiplier) {
         // Get the current date
         Date currentDate = new Date();
 
@@ -253,7 +232,7 @@ public class JsonManager {
 
         // Generate a random number of milliseconds within 7 days
         Random random = new Random();
-        long randomMillisToAdd = Math.abs(random.nextLong() % (7 * 24 * 60 * 60 * 1000));
+        long randomMillisToAdd = multiplier * Math.abs(random.nextLong() % (7 * 24 * 60 * 60 * 1000));
 
         // Add the random duration to the current date
         calendar.add(java.util.Calendar.MILLISECOND, (int) randomMillisToAdd);

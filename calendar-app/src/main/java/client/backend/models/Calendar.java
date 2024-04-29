@@ -52,6 +52,18 @@ public class Calendar implements Savable<Calendar> {
         this.workspaceId = workspace.getId();
     }
 
+    public Calendar(ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards, ArrayList<User> users, Workspace workspace) {
+        this.id = UUID.randomUUID().toString();
+        this.kanbanBoards = kanbanBoards;
+        this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
+        this.orphanCards = orphanCards;
+        this.orphanCardIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
+        this.members = users;
+        this.memberIds = users.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
+        this.workspace = workspace;
+        this.workspaceId = workspace.getId();
+    }
+
     //region Getters/setters
     public Calendar setID(String newID) {
         this.id = newID;
@@ -113,6 +125,10 @@ public class Calendar implements Savable<Calendar> {
         this.orphanCards.add(newOrphan);
         this.orphanCardIds.add(newOrphan.getId());
         return this;
+    }
+
+    public ArrayList<String> getOrphanCardIds() {
+        return this.orphanCardIds;
     }
 
     public Card[] deleteFromOrphanCards(Predicate<Card> filterFunc) {

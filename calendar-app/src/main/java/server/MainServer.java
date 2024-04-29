@@ -29,8 +29,8 @@ import client.backend.models.*;
 
 public class MainServer {
 
-    static final int PORT = 8080;
     static final String IP_ADDR = "127.0.0.1";
+    static final int PORT = 8080;
 
     public MainServer() {
         QueuedThreadPool threadPool = new QueuedThreadPool();

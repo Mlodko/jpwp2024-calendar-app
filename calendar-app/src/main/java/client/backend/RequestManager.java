@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public class RequestManager {
+public class RequestManager implements AutoCloseable {
 
     private static final String IP_ADDR = "127.0.0.1:8080";
 
@@ -95,5 +95,10 @@ public class RequestManager {
         }
 
         return loggedInUser;
+    }
+
+    @Override
+    public void close() throws Exception {
+        httpClient.stop();
     }
 }

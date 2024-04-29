@@ -22,7 +22,6 @@ public class User implements Savable<User>{
     @Expose String email;
     String password;
 
-    public static final User NULL_OBJECT = new User();
 
     ArrayList<Calendar> userCalendars = new ArrayList<>();
 

@@ -12,6 +12,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -61,8 +62,18 @@ public class LoginView {
                     "Email: " + loggedInUser.get().getEmail(), ButtonType.OK);
             alert.showAndWait();
 
-            // TODO create main window with login user
-            //  sth like `createMainScene(User)`
+            Stage mainStage = new Stage();
+            mainStage.setTitle("Calendar App");
+            try {
+                mainStage.setScene(new MainView().createCalendarView(loggedInUser.get()));
+            } catch (IOException e) {
+                e.printStackTrace();
+                new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.")
+                .showAndWait();
+                return;
+            }
+            loginButton.getScene().getWindow().hide();
+            mainStage.show();
         });
 
         registerButton.setOnAction(event -> {
@@ -175,8 +186,18 @@ public class LoginView {
                 return;
             }
 
-            // TODO create main window with the given user
-            //      The user is guaranteed to exist by now in the Optional
+            Stage mainStage = new Stage();
+            mainStage.setTitle("Calendar App");
+            try {
+                mainStage.setScene(new MainView().createCalendarView(registeredUser.get()));
+            } catch (IOException e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.");
+                alert.showAndWait();
+                return;
+            }
+            registerButton.getScene().getWindow().hide();
+            mainStage.show();
         });
 
         return new Scene(gridPane);

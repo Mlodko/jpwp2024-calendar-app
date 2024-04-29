@@ -114,5 +114,9 @@ public class Workspace implements Savable<Workspace>{
         return this;
     }
 
+    public ArrayList<String> getMemberIds() {
+        return memberIds;
+    }
+
     //endregion
 }

@@ -57,6 +57,16 @@ public class Card implements Savable<Card> {
         this.lastModifyTime = lastModifyTime;
     }
 
+    public Card(String title, String description, Date startTime, Date endTime) {
+        this.id = UUID.randomUUID().toString();
+        this.title = title;
+        this.description = description;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.creationTime = new Date();
+        this.lastModifyTime = new Date();
+    }
+
     public Card() {
         this.id = UUID.randomUUID().toString();
     }

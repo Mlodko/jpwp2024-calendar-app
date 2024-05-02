@@ -21,15 +21,15 @@ public class User implements Savable<User>{
     @Expose String passwordHash;
     @Expose String email;
     String password;
+    String authToken; // Token that the server sends on login, used to authenticate the user from now on
 
 
-    ArrayList<Calendar> userCalendars = new ArrayList<>();
 
     static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     // TODO permissions
 
-    protected User() { }
+    public User() { }
 
     public User(String id, String username, String password, String email) {
         this.id = id;
@@ -82,6 +82,15 @@ public class User implements Savable<User>{
     public User setPassword(String password) {
         this.password = password;
         this.passwordHash = sha256Hex(password);
+        return this;
+    }
+
+    public String getAuthToken() {
+        return authToken;
+    }
+
+    public User setAuthToken(String authToken) {
+        this.authToken = authToken;
         return this;
     }
     //endregion

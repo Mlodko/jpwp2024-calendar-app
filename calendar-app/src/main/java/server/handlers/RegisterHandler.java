@@ -3,6 +3,7 @@ package server.handlers;
 import client.backend.models.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -40,7 +41,6 @@ public class RegisterHandler extends Handler.Abstract {
             return true;
         }
 
-
         User requestUser = gson.fromJson(requestJson, User.class);
 
         Optional<User> registeredUser = manager.registerUser(requestUser.getUsername(), requestUser.getPasswordHash(), requestUser.getEmail());
@@ -54,6 +54,7 @@ public class RegisterHandler extends Handler.Abstract {
         String registeredUserJson = gson.toJson(registeredUser.get());
         response.setStatus(200); // OK, user registered
 
+        response.getHeaders().add(HttpHeader.AUTHORIZATION, registeredUser.get().getAuthToken());
         response.write(true, StandardCharsets.UTF_8.encode(registeredUserJson), callback);
         callback.succeeded();
         return true;

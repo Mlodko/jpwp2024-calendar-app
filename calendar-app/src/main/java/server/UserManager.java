@@ -5,9 +5,12 @@ import client.backend.models.User;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 public class UserManager {
+    // hold ALL USERS since the beginning
     private ArrayList<User> userCache;
+    private static final ArrayList<User> loggedInUsers = new ArrayList<>();
 
     public UserManager() {
         try {
@@ -15,6 +18,17 @@ public class UserManager {
         } catch(IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public Optional<User> loginUser(String username, String password) {
+        Optional<User> loggedInUser = authenticateUser(username, password);
+
+        if(loggedInUser.isPresent()) {
+            loggedInUser.get().setAuthToken(UUID.randomUUID().toString());
+            this.loggedInUsers.add(loggedInUser.get());
+        }
+
+        return loggedInUser;
     }
 
     public Optional<User> authenticateUser(String username, String passwordHash) {
@@ -38,6 +52,8 @@ public class UserManager {
         }
 
         User user = new User(username, passwordHash, email);
+        user.setAuthToken(UUID.randomUUID().toString());
+        loggedInUsers.add(user);
         userCache.add(user);
 
         try {
@@ -56,6 +72,14 @@ public class UserManager {
         } catch(IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean ifAuthTokenInLoggedInUsers(String authToken) {
+        return loggedInUsers.stream().map(User::getAuthToken).toList().contains(authToken);
+    }
+
+    public static Optional<User> findUserWithAuthToken(String authToken) {
+        return loggedInUsers.stream().filter(user -> user.getAuthToken().equals(authToken)).findFirst();
     }
 
 }

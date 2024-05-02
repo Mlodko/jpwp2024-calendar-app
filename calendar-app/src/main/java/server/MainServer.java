@@ -1,15 +1,18 @@
 package server;
 
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
 import server.handlers.CardHandler;
 import server.handlers.LoginHandler;
 import server.handlers.RegisterHandler;
+import server.handlers.WorkspaceHandler;
 
 public class MainServer {
+
+    // TODO token authentication
 
     static final String IP_ADDR = "127.0.0.1";
     static final int PORT = 8080;
@@ -30,9 +33,10 @@ public class MainServer {
         contextCollection.addHandler(new ContextHandler(new CardHandler(), "/cards"));
         contextCollection.addHandler(new ContextHandler(new LoginHandler(), "/login"));
         contextCollection.addHandler(new ContextHandler(new RegisterHandler(), "/register"));
-
+        contextCollection.addHandler(new ContextHandler(new WorkspaceHandler(), "/workspace"));
 
         server.setHandler(contextCollection);
+
         try {
             server.start();
         } catch (Exception e) {

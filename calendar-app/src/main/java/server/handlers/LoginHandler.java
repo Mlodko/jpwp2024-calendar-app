@@ -3,6 +3,7 @@ package server.handlers;
 import client.backend.models.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -12,12 +13,15 @@ import server.UserManager;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class LoginHandler extends Handler.Abstract {
 
-    Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
-    UserManager manager = new UserManager();
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    private final UserManager manager = new UserManager();
+
 
     @Override
     public boolean handle(Request request, Response response, Callback callback) {
@@ -44,7 +48,7 @@ public class LoginHandler extends Handler.Abstract {
 
         User requestUser = gson.fromJson(requestJson, User.class);
 
-        Optional<User> loggedInUser = manager.authenticateUser(requestUser.getUsername(), requestUser.getPasswordHash());
+        Optional<User> loggedInUser = manager.loginUser(requestUser.getUsername(), requestUser.getPasswordHash());
 
         if (loggedInUser.isEmpty()) {
             response.setStatus(401); // Unauthorized, bad credentials https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
@@ -55,9 +59,9 @@ public class LoginHandler extends Handler.Abstract {
         String userJson = gson.toJson(loggedInUser.get());
         response.setStatus(200); // OK, successfully logged in
 
+        response.getHeaders().add(HttpHeader.AUTHORIZATION, loggedInUser.get().getAuthToken());
         response.write(true, StandardCharsets.UTF_8.encode(userJson), callback);
         callback.succeeded();
         return true;
-
     }
 }

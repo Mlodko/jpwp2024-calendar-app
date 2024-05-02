@@ -33,6 +33,32 @@ public class JsonManager {
         return rootDir.toString();
     }
 
+    public static void writeWorkspaceData(Workspace workspace) throws IOException {
+        File workspaceFile = new File(getRootDirectory() + "workspace/workspace.json");
+
+        if(!workspaceFile.exists() && !workspaceFile.getParentFile().mkdirs()) {
+            throw new IOException("Could not create workspace directory - " + workspaceFile.getParentFile().getAbsolutePath());
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+
+        String json = gson.toJson(workspace);
+
+        if(!workspaceFile.exists()) {
+            workspaceFile.createNewFile();
+        }
+
+        try (BufferedWriter writer = Files.newBufferedWriter(workspaceFile.toPath())) {
+            writer.write(json);
+            writer.flush();
+        } catch(IOException e) {
+            System.err.println(e.getMessage() + "\nCouldn't write to file " + workspaceFile.getAbsolutePath());
+            e.printStackTrace();
+        }
+
+        writeAllCalendarsData(workspace.getCalendars());
+    }
+
     public static void writeAllCalendarsData(ArrayList<Calendar> calendars) throws IOException {
         File calendarsFile = new File(rootDir.toString() + "/workspace/calendars.json");
 
@@ -83,6 +109,33 @@ public class JsonManager {
         }
     }
 
+    /*
+    workspace
+    |_workspace.json
+    |_calendars.json
+    |_foldery...
+     */
+
+    public static Workspace readWorkspaceData() throws IOException {
+        File file = new File(rootDir.toString() + "/workspace/workspace.json");
+
+        if(!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
+            throw new IOException("Unable to create directory " + file.getParentFile().getAbsolutePath());
+        }
+
+        if (!file.exists()) {
+            file.createNewFile();
+            return Workspace.DEFAULT;
+        }
+
+        String jsonString = new String(Files.readAllBytes(file.toPath()));
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+        Workspace workspace = gson.fromJson(jsonString, Workspace.class);
+        workspace.setCalendars(readAllCalendars());
+
+        return workspace;
+    }
+
     public static ArrayList<Calendar> readAllCalendars() throws IOException {
         ArrayList<Calendar> calendars = JsonManager.readAllCalendarsIdData();
 
@@ -104,12 +157,14 @@ public class JsonManager {
                 newBoard.setCalendar(calendar);
 
                 HashMap<String, ArrayList<Card>> itemHashmap = new HashMap<>();
+
                 newBoard.getItemIds().forEach((columnTitle, itemIdList) -> {
                     ArrayList<Card> itemList = allCards.stream()
                             .filter(card -> itemIdList.contains(card.getId()))
                             .collect(Collectors.toCollection(ArrayList::new));
                     itemHashmap.put(columnTitle, itemList);
                 });
+
                 newBoard.setItemsLists(itemHashmap);
             }
 

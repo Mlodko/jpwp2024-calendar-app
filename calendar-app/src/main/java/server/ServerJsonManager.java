@@ -28,8 +28,8 @@ public class ServerJsonManager {
          return rootDir.toString();
      }
 
-     public static void writeWorkspaceData(Workspace workspace) throws IOException {
-         File calendarsFile = new File(rootDir.toString() + "/workspace-" + workspace.getId() + "/calendars.json");
+     public static void writeWorkspaceData(Workspace workspace, boolean ifWriteChildren) throws IOException {
+         File calendarsFile = new File(rootDir.toString() + "/workspaces/workspace-" + workspace.getId() + "/workspace.json");
 
          if(!calendarsFile.exists() && !calendarsFile.getParentFile().mkdirs()) {
              throw new IOException("Unable to create directory " + calendarsFile.getParentFile().getAbsolutePath());
@@ -49,13 +49,15 @@ public class ServerJsonManager {
              e.printStackTrace();
          }
 
-         for (Calendar calendar: workspace.getCalendars()) {
-             writeCalendarData(calendar);
+         if (ifWriteChildren) {
+             for (Calendar calendar : workspace.getCalendars()) {
+                 writeCalendarData(calendar);
+             }
          }
      }
 
-     private static void writeCalendarData(Calendar calendar) throws IOException {
-         File calendarDir = new File(rootDir + "workspace-" + calendar.getWorkspace().getId() +
+     public static void writeCalendarData(Calendar calendar) throws IOException {
+         File calendarDir = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() + "/");
 
          if(!calendarDir.exists() && !calendarDir.getParentFile().mkdirs()) {
@@ -68,7 +70,7 @@ public class ServerJsonManager {
 
      private static void writeKanbanData (Calendar calendar) throws IOException {
 
-         File calendarFile = new File(rootDir.toString() + "/workspace-" + calendar.getWorkspace().getId() +
+         File calendarFile = new File(rootDir.toString() + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                                         "/calendar-" + calendar.getID() +
                                         "/boards.json");
 
@@ -92,7 +94,7 @@ public class ServerJsonManager {
      }
 
      private static void writeCardData(Calendar calendar) throws IOException {
-         File cardsFile = new File(rootDir + "/workspace-" + calendar.getWorkspace().getId() +
+         File cardsFile = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() +
                  "/cards.json");
          if(!cardsFile.exists()) {
@@ -113,9 +115,37 @@ public class ServerJsonManager {
          }
      }
 
+     public static ArrayList<Workspace> readAllWorkspaces(){
+         File workspacesDir = new File(rootDir.toString() + "/workspaces/");
+
+         if(!workspacesDir.exists()) {
+             workspacesDir.mkdirs();
+             return new ArrayList<>();
+         }
+
+         ArrayList<File> workspaceDirs = Stream.of(workspacesDir.listFiles())
+                 .filter(file -> file.isDirectory() && file.getName().contains("workspace"))
+                 .collect(Collectors.toCollection(ArrayList::new));
+
+         ArrayList<Workspace> workspaces = new ArrayList<>();
+         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+
+         try {
+             for (File dir : workspaceDirs) {
+                 File workspaceFile = new File(dir.toPath() + "/workspace.json");
+                 String jsonString = new String(Files.readAllBytes(workspaceFile.toPath()));
+                 workspaces.add(readWorkspaceData(gson.fromJson(jsonString, Workspace.class)));
+             }
+         } catch(IOException e) {
+             return new ArrayList<>();
+         }
+
+         return workspaces;
+     }
+
 
      public static Workspace readWorkspaceData(Workspace workspace) throws IOException {
-         File workspaceDir = new File(rootDir + "workspace-" + workspace.getId() + "/");
+         File workspaceDir = new File(rootDir + "/workspaces/workspace-" + workspace.getId() + "/");
 
          if(!workspaceDir.exists()) {
              throw new IOException("Directory " + workspaceDir.getAbsolutePath() + " doesn't exist.");
@@ -140,7 +170,7 @@ public class ServerJsonManager {
      }
 
      private static Calendar readCalendarData(Calendar calendar) throws IOException {
-         File calendarDir = new File(rootDir + "workspace-" + calendar.getWorkspace().getId() +
+         File calendarDir = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() + "/");
 
          if(!calendarDir.exists()) {
@@ -170,7 +200,7 @@ public class ServerJsonManager {
      }
 
      private static ArrayList<KanbanBoard> readKanbanData(Calendar calendar) throws IOException {
-         File boardsFile = new File(rootDir + "/workspace-" + calendar.getWorkspace().getId() +
+         File boardsFile = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() +
                  "/boards.json");
 
@@ -186,7 +216,7 @@ public class ServerJsonManager {
      }
 
      private static ArrayList<Card> readCardData(Calendar calendar) throws IOException {
-         File cardsFile = new File(rootDir + "/workspace-" + calendar.getWorkspace().getId() +
+         File cardsFile = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() +
                  "/cards.json");
 

@@ -23,6 +23,8 @@ public class Workspace implements Savable<Workspace>{
     private ArrayList<Calendar> calendars;
     private ArrayList<User> members;
 
+    public static final Workspace DEFAULT = new Workspace("DEFAULT", "DEFAULT");
+
     private final static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     public Workspace(String id, String name, String description, ArrayList<Calendar> calendars) {

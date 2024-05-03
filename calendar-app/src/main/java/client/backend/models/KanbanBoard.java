@@ -182,6 +182,12 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         this.lastModifiedTime = new Date();
         return this;
     }
+
+    public ArrayList<Card> getItems() {
+        return this.itemsLists.values().stream()
+                .flatMap(ArrayList::stream)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
     //endregion
 
     public boolean hasStartAndEndDate() {

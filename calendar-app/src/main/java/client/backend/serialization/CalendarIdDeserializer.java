@@ -24,9 +24,6 @@ public class CalendarIdDeserializer implements JsonDeserializer<Calendar> {
         calendar.setKanbanBoards(boards);
 
         ArrayList<Card> cards = new ArrayList<>();
-        for (JsonElement orphanCardId : jsonObject.getAsJsonArray("orphanCardIds").asList()) {
-            cards.add(new Card(orphanCardId.getAsString()));
-        }
 
         calendar.setOrphanCards(cards);
 

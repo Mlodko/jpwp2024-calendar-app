@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class MainView {
     public Scene createCalendarView(User loggedInUser) throws IOException {
         CalendarView calendarView = new CalendarView();
-        ArrayList<Calendar> myCalendars = JsonManager.readAllCalendars();
+        ArrayList<Calendar> myCalendars = JsonManager.readWorkspace();
 
         // Delete default calendar source
         calendarView.getCalendarSources().clear();

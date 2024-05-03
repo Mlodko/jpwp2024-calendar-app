@@ -1,9 +1,5 @@
 package client.backend.models;
 
-import client.backend.serialization.CardIdDeserializer;
-import client.backend.serialization.CardIdSerializer;
-import client.backend.serialization.KanbanIdDeserializer;
-import client.backend.serialization.KanbanIdSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
@@ -18,7 +14,6 @@ public class Calendar implements Savable<Calendar> {
     private ArrayList<KanbanBoard> kanbanBoards;
     @Expose private ArrayList<String> kanbanIds;
     private ArrayList<Card> orphanCards;
-    @Expose private ArrayList<String> orphanCardIds;
 
     private ArrayList<User> members;
 
@@ -44,7 +39,6 @@ public class Calendar implements Savable<Calendar> {
         this.id = id;
         this.orphanCards = orphanCards;
         this.kanbanBoards = kanbanBoards;
-        this.orphanCardIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         this.members = members;
         this.memberIds = members.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
@@ -57,7 +51,6 @@ public class Calendar implements Savable<Calendar> {
         this.kanbanBoards = kanbanBoards;
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         this.orphanCards = orphanCards;
-        this.orphanCardIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         this.members = users;
         this.memberIds = users.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
         this.workspace = workspace;
@@ -81,6 +74,12 @@ public class Calendar implements Savable<Calendar> {
     public List<String> getKanbanIds() { return this.kanbanIds; }
 
     public Calendar setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
+        if (newKanbanBoards == null) {
+            this.kanbanBoards = new ArrayList<>();
+            this.kanbanIds = new ArrayList<>();
+            return this;
+        }
+
         this.kanbanBoards = newKanbanBoards;
         this.kanbanIds = this.kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         return this;
@@ -111,37 +110,28 @@ public class Calendar implements Savable<Calendar> {
 
     public Calendar setOrphanCards(ArrayList<Card> newOrphanCards) {
         this.orphanCards = newOrphanCards;
-        this.orphanCardIds = newOrphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         return this;
     }
 
     public Calendar setOrphanCard(Card card, int index) {
         this.orphanCards.set(index, card);
-        this.orphanCardIds.set(index, card.getId());
         return this;
     }
 
     public Calendar addToOrphanCards(Card newOrphan) {
         this.orphanCards.add(newOrphan);
-        this.orphanCardIds.add(newOrphan.getId());
         return this;
-    }
-
-    public ArrayList<String> getOrphanCardIds() {
-        return this.orphanCardIds;
     }
 
     public Card[] deleteFromOrphanCards(Predicate<Card> filterFunc) {
         Card[] removedOrphans = this.orphanCards.stream().filter(filterFunc).toArray(Card[]::new);
         this.orphanCards.removeIf(filterFunc);
-        this.orphanCardIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         return removedOrphans;
     }
 
     public boolean moveCardToKanban(Card card, KanbanBoard board, String kanbanColumnTitle) {
         Card[] cards = deleteFromOrphanCards(current_card -> current_card.getId().equals(card.getId()));
 
-        // TODO maybe revisit
         try {
             board.addToItemsList(kanbanColumnTitle, new ArrayList<>(Arrays.asList(cards)));
         } catch (NoSuchElementException e) {
@@ -187,4 +177,3 @@ public class Calendar implements Savable<Calendar> {
     }
 
 }
-

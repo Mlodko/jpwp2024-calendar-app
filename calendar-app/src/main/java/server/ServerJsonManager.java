@@ -1,16 +1,13 @@
 package server;
 
 import client.backend.models.*;
-import client.backend.serialization.ColorSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import javafx.scene.paint.Color;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -153,7 +151,7 @@ public class ServerJsonManager {
              for (File dir : workspaceDirs) {
                  File workspaceFile = new File(dir.toPath() + "/workspace.json");
                  String jsonString = new String(Files.readAllBytes(workspaceFile.toPath()));
-                 workspaces.add(readWorkspaceData(gson.fromJson(jsonString, Workspace.class)));
+                 workspaces.add(readCompleteWorkspaceData(gson.fromJson(jsonString, Workspace.class)));
              }
          } catch(IOException e) {
              return new ArrayList<>();
@@ -162,8 +160,24 @@ public class ServerJsonManager {
          return workspaces;
      }
 
+     public static Optional<Workspace> readWorkspaceData(String workspaceId) {
+         File workspaceFile = new File(rootDir + "/workspaces/workspace-" + workspaceId + "/workspace.json");
+         if(!workspaceFile.exists()) {
+             return Optional.empty();
+         }
 
-     public static Workspace readWorkspaceData(Workspace workspace) throws IOException {
+         String json;
+         try {
+             json = Files.readString(workspaceFile.toPath());
+         } catch (IOException e) {
+             return Optional.empty();
+         }
+
+         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+         return Optional.of(gson.fromJson(json, Workspace.class));
+     }
+
+     public static Workspace readCompleteWorkspaceData(Workspace workspace) throws IOException {
          File workspaceDir = new File(rootDir + "/workspaces/workspace-" + workspace.getId() + "/");
 
          if(!workspaceDir.exists()) {
@@ -179,9 +193,9 @@ public class ServerJsonManager {
                      }
                  }).collect(Collectors.toCollection(ArrayList::new)));
 
-         ArrayList<User> members = readUsersData();
+         ArrayList<User> allUsers = readUsersData();
          ArrayList<String> memberIds = workspace.getMemberIds();
-         workspace.setMembers(members.stream()
+         workspace.setMembers(allUsers.stream()
                  .filter(member -> memberIds.contains(member.getId()))
                  .collect(Collectors.toCollection(ArrayList::new)));
 

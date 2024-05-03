@@ -94,6 +94,10 @@ public class Workspace implements Savable<Workspace>{
         return calendars;
     }
 
+    public ArrayList<String> getCalendarIds() {
+        return this.calendarIds;
+    }
+
     public Workspace setCalendars(ArrayList<Calendar> calendars) {
         this.calendars = calendars;
         this.calendarIds = calendars.stream().map(Calendar::getID).collect(Collectors.toCollection(ArrayList::new));
@@ -101,6 +105,8 @@ public class Workspace implements Savable<Workspace>{
     }
 
     public Workspace addToCalendars(Calendar calendar) {
+        if(calendars == null) this.calendars = new ArrayList<>();
+        if(calendarIds == null) this.calendarIds = new ArrayList<>();
         this.calendars.add(calendar);
         this.calendarIds.add(calendar.getID());
         return this;

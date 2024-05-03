@@ -3,18 +3,13 @@ package com.example.calendarapp;
 import client.backend.JsonManager;
 import client.frontend.CalendarFXFactory;
 import client.frontend.LoginView;
-import client.frontend.MarkdownParser;
-import com.calendarfx.model.Calendar;
 import com.calendarfx.model.CalendarSource;
 import com.calendarfx.view.CalendarView;
-import com.calendarfx.view.page.MonthPage;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -38,7 +33,7 @@ public class HelloApplication extends Application {
         Font font = new Font("file:/resources/client.frontend/Roboto-Medium.tff", 22);
         CalendarView calendarView = new CalendarView();
         // TODO if there are no calendars available, the app will crash :)
-        ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readAllCalendars();
+        ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readWorkspace();
 
         // Delete default calendar source
         calendarView.getCalendarSources().clear();

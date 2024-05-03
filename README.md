@@ -21,9 +21,11 @@ Aby odpalić projekt należy:
 ___
 # Zadania
 
+>*Zadania można wykonać w dowolnym języku, ale ze względu na prezentację materiały są przygotowane pod Javę.*
+
 ### Zadanie 1.  
 
-Napisz prosty parser trzech znaczników Markdowna: \**dla kursywy*\*, \*\***dla pogrubienia**\*\* i ***\*\*\*pogrubionej kursywy***\*\*\* (zaimplementowany w dowolnym prostym okienku). 
+Napisz (zaimplementowany w dowolnym, prostym okienku) parser trzech znaczników Markdowna: \**dla kursywy*\*, \*\***dla pogrubienia**\*\* i ***\*\*\*pogrubionej kursywy***\*\*\* - <u>nie musisz uwzględniać sytuacji z zagnieżdżonymi znacznikami</u>. 
 
 >Przekaż na UPEL screenshot z owego okienka z dowolnym tekstem, który w dowolny sposób sformatujesz tymi trzema znacznikami.
 
@@ -43,10 +45,10 @@ Stwórz prosty serwer *HTTP*, którego zadaniem jest jedynie nasłuchiwanie na p
 - name = twoje imię, 
 - password = dowolny ciąg znaków. 
 
-Na UPEL przekaż treść żądania HTTP (screenshot lub wklejony tekst) odebraną przez aplikację serwera przy tworzeniu klasy *User*.
+>Na UPEL przekaż treść żądania HTTP (screenshot lub wklejony tekst) odebraną przez aplikację serwera przy tworzeniu klasy *User*.
 
 ### Zadanie 4.
 
-Korzystając z napisanych już klas prześlij przez przeglądarkę (*\https://localhost:8080/\[treść]*) do serwera *HTTP* dane nowego użytkownika (**które zostaną podane na zajęciach**) - serwer niech automatycznie zserializuje nowopowstały obiekt do pliku *.json*, po czym wyświetli odpowiednio sformatowane, odebrane żądanie w okienku z zadania 1.
+Korzystając z napisanych już klas prześlij przez przeglądarkę (*https://localhost:8080/\[treść]*) do serwera *HTTP* dane nowego użytkownika (**które zostaną podane na zajęciach**) - serwer niech automatycznie zserializuje nowopowstały obiekt do pliku *.json*, po czym wyświetli odpowiednio sformatowane, odebrane żądanie w okienku z zadania 1.
 
-Na UPEL prześlij screenshot sformatowanego (w okienku z zadania 1.), odebranego żądania *HTTP* z odpowiednim tekstem.
+>Na UPEL prześlij screenshot sformatowanego (w okienku z zadania 1.), odebranego żądania *HTTP* z odpowiednim tekstem.

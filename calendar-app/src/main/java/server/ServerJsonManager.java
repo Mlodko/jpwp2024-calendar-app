@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ServerJsonManager {
+
     private final static Path rootDir = Path.of(Paths.get("").toAbsolutePath() + "/server");
 
      public static String getRootDirectory() {
@@ -37,7 +38,7 @@ public class ServerJsonManager {
 
          Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
 
-         String json = gson.toJson(workspace.getCalendars());
+         String json = gson.toJson(workspace);
 
          if(!calendarsFile.exists()) calendarsFile.createNewFile();
 
@@ -51,12 +52,12 @@ public class ServerJsonManager {
 
          if (ifWriteChildren) {
              for (Calendar calendar : workspace.getCalendars()) {
-                 writeCalendarData(calendar);
+                 writeCalendarData(calendar, true);
              }
          }
      }
 
-     public static void writeCalendarData(Calendar calendar) throws IOException {
+     public static void writeCalendarData(Calendar calendar, boolean ifWriteChildren) throws IOException {
          File calendarDir = new File(rootDir + "/workspaces/workspace-" + calendar.getWorkspace().getId() +
                  "/calendar-" + calendar.getID() + "/");
 
@@ -64,8 +65,30 @@ public class ServerJsonManager {
              throw new IOException("Unable to create directory " + calendarDir.getAbsolutePath());
          }
 
-         writeKanbanData(calendar);
-         writeCardData(calendar);
+         if(ifWriteChildren) {
+             writeKanbanData(calendar);
+             writeCardData(calendar);
+         }
+     }
+
+     public static void writeKanbanData(ArrayList<KanbanBoard> boards, String workspaceId, String calendarId) throws IOException {
+         File boardsFile = new File(rootDir + "/workspaces/workspace-" + workspaceId +
+                 "/calendar-" + calendarId +
+                 "/boards.json");
+
+         if(!boardsFile.getParentFile().exists() && !boardsFile.getParentFile().mkdirs()) {
+             throw new IOException("Unable to create directory " + boardsFile.getParentFile().getAbsolutePath());
+         }
+
+         if(!boardsFile.exists())
+             boardsFile.createNewFile();
+
+         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+
+         try(BufferedWriter writer = Files.newBufferedWriter(boardsFile.toPath())) {
+             writer.write(gson.toJson(boards));
+             writer.flush();
+         }
      }
 
      private static void writeKanbanData (Calendar calendar) throws IOException {
@@ -81,16 +104,12 @@ public class ServerJsonManager {
          if(!calendarFile.exists())
              calendarFile.createNewFile();
 
-
-
          Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
 
          try(BufferedWriter writer = Files.newBufferedWriter(calendarFile.toPath())) {
              writer.write(gson.toJson(calendar.getKanbanBoards()));
              writer.flush();
          }
-
-
      }
 
      private static void writeCardData(Calendar calendar) throws IOException {

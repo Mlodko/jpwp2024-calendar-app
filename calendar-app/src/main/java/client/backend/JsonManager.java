@@ -33,10 +33,10 @@ public class JsonManager {
         return rootDir.toString();
     }
 
-    public static void writeWorkspaceData(Workspace workspace) throws IOException {
-        File workspaceFile = new File(getRootDirectory() + "workspace/workspace.json");
+    public static void writeWorkspaceData(Workspace workspace, boolean ifWriteChildren) throws IOException {
+        File workspaceFile = new File(getRootDirectory() + "/workspace/workspace.json");
 
-        if(!workspaceFile.exists() && !workspaceFile.getParentFile().mkdirs()) {
+        if(!workspaceFile.getParentFile().exists() && !workspaceFile.getParentFile().mkdirs()) {
             throw new IOException("Could not create workspace directory - " + workspaceFile.getParentFile().getAbsolutePath());
         }
 
@@ -56,7 +56,8 @@ public class JsonManager {
             e.printStackTrace();
         }
 
-        writeAllCalendarsData(workspace.getCalendars());
+        if(ifWriteChildren)
+            writeAllCalendarsData(workspace.getCalendars());
     }
 
     public static void writeAllCalendarsData(ArrayList<Calendar> calendars) throws IOException {
@@ -274,7 +275,7 @@ public class JsonManager {
         workspace.setCalendars(calendars);
         boards.get(0).setCalendar(calendars.get(0));
 
-        JsonManager.writeAllCalendarsData(calendars);
+        writeWorkspaceData(workspace, false);
     }
 
     static Date getRandomDateWithin7Days(long multiplier) {
@@ -295,7 +296,6 @@ public class JsonManager {
         // Return the random date
         return calendar.getTime();
     }
-
 }
 
 

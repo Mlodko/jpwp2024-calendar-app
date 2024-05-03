@@ -100,6 +100,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         return this;
     }
 
+    public String getCalendarId() { return this.calendarId;}
+
     public HashMap<String, ArrayList<Card>> getItemsLists() {
         return itemsLists;
     }

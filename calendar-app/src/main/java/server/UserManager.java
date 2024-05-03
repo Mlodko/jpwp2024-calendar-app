@@ -53,15 +53,15 @@ public class UserManager {
 
         User user = new User(username, passwordHash, email);
         user.setAuthToken(UUID.randomUUID().toString());
-        loggedInUsers.add(user);
-        userCache.add(user);
 
-        try {
-            ServerJsonManager.addToUsers(user);
-        } catch(IOException e) {
-            e.printStackTrace();
+
+        if(!ServerJsonManager.addToUsers(user)) {
+            // Saving to users.json failed
             return Optional.empty();
         }
+
+        loggedInUsers.add(user);
+        userCache.add(user);
 
         return Optional.of(user);
     }

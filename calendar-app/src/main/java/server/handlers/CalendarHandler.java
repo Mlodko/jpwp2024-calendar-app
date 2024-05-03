@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
 import server.ServerJsonManager;
 import server.UserManager;
@@ -92,25 +93,43 @@ public class CalendarHandler extends Handler.Abstract {
         response.setStatus(200); // OK
     }
 
-    // TODO why callback?
     private void synchronizeServer(Request request, Response response, Callback callback) {
         /*  Try to read data
             it should have:
             - an AUTHORIZATION header with auth-token
             - calendar.json
+            - "workspace-id" parameter
         */
 
         // Check user authorization
         if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
             response.setStatus(401); // Unauthorized, no authorization provided
+            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
             return;
         }
 
         String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
         if (!UserManager.ifAuthTokenInLoggedInUsers(authToken)) {
             response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
             return;
         }
+
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch (Exception e) {
+            response.setStatus(500); // Server error
+            return;
+        }
+
+        if (!parameters.getNames().contains("workspace-id")) {
+            response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("No workspace-id parameter"), callback);
+            return;
+        }
+
+        String workspaceId = parameters.getValue("workspace-id");
 
         Optional<User> authorizedUser = UserManager.findUserWithAuthToken(authToken);
 
@@ -140,7 +159,7 @@ public class CalendarHandler extends Handler.Abstract {
         }
 
         try {
-            ServerJsonManager.writeCalendarData(calendar, false);
+            ServerJsonManager.writeCalendarData(calendar, workspaceId);
         } catch(IOException e) {
             e.printStackTrace();
             response.setStatus(500); // Server error

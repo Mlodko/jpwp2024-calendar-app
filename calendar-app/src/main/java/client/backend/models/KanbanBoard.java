@@ -127,10 +127,15 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     }
 
     public KanbanBoard addToItemsList(String columnTitle, ArrayList<Card> items) throws java.util.NoSuchElementException{
+        if(this.itemsLists == null) {
+            this.itemsLists = new HashMap<>();
+        }
+
         if(!itemsLists.containsKey(columnTitle)) {
             throw new java.util.NoSuchElementException("The item list with title " + columnTitle + " doesn't exist." +
                     "\nTry calling addNewItemColumn()" );
         }
+
         itemsLists.get(columnTitle).addAll(items);
         itemIds.get(columnTitle).addAll(items.stream().map(Card::getId).toList());
         this.lastModifiedTime = new Date();

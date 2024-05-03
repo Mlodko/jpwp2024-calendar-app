@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class ObjectManager {
-    private static ArrayList<Workspace> workspaces = ServerJsonManager.readAllWorkspaces();
+    private static ArrayList<Workspace> workspaces = ServerJsonManager.readALLdata();
 
     public static ArrayList<Workspace> getWorkspaces() {
         refreshWorkspaces();
@@ -30,7 +30,7 @@ public class ObjectManager {
     }
 
     public static void refreshWorkspaces() {
-        workspaces = ServerJsonManager.readAllWorkspaces();
+        workspaces = ServerJsonManager.readALLdata();
     }
 
     public static void main(String[] args) {

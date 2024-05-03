@@ -143,7 +143,7 @@ public class BoardHandler extends Handler.Abstract {
         String calendarId = Request.getParameters(request).getValue("calendar-id");
 
         try {
-            ServerJsonManager.writeKanbanData(boards, workspaceId, calendarId);
+            ServerJsonManager.writeKanbanBoards(boards, workspaceId, calendarId);
         } catch (IOException e) {
             response.setStatus(500);
         }

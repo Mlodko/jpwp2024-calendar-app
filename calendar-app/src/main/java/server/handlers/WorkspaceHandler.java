@@ -36,7 +36,7 @@ public class WorkspaceHandler extends Handler.Abstract {
                 synchronizeClientToServer(request, response, callback);
             }
             case "POST" -> {
-                synchronizeServerToClient(request, response);
+                synchronizeServerToClient(request, response, callback);
             }
             default -> {
                 response.setStatus(400); // Bad request
@@ -73,7 +73,7 @@ public class WorkspaceHandler extends Handler.Abstract {
         Optional<User> goodUser = UserManager.findUserWithAuthToken(authToken);
 
         if (goodUser.isEmpty()) {
-            response.setStatus(401);
+            response.setStatus(401); // Unauthorized
             response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
             return;
         }
@@ -91,17 +91,26 @@ public class WorkspaceHandler extends Handler.Abstract {
         }
 
         ArrayList<Workspace> workspaces = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspaceIds.contains(workspace.getId()) &&
-                        workspace.getMemberIds().contains(goodUser.get().getId()))
+                .filter(workspace -> workspaceIds.contains(workspace.getId()))
                 .collect(Collectors.toCollection(ArrayList::new));
+        if(workspaces.isEmpty()) {
+            response.setStatus(404); // Not found
+            response.write(true, StandardCharsets.UTF_8.encode("Workspace not found"), callback);
+            return;
+        }
+        if(workspaces.stream().anyMatch(workspace -> workspace.getMemberIds().contains(goodUser.get().getId()))) {
+            response.setStatus(403); // Forbidden
+            response.write(true, StandardCharsets.UTF_8.encode("Not authorized to access resource"), callback);
+            return;
+        }
 
         // If authorized send
         String responseJson = gson.toJson(workspaces);
-        response.setStatus(200);
+        response.setStatus(200); // OK
         response.write(true, StandardCharsets.UTF_8.encode(responseJson), callback);
     }
 
-    private void synchronizeServerToClient(Request request, Response response) {
+    private void synchronizeServerToClient(Request request, Response response, Callback callback) {
         /*  Try to read data
             it should have:
             - an AUTHORIZATION header with auth-token
@@ -111,19 +120,24 @@ public class WorkspaceHandler extends Handler.Abstract {
         // Check user authorization
         if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
             response.setStatus(401); // Unauthorized, no authorization provided
+            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
+
             return;
         }
 
         String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
         if (!UserManager.ifAuthTokenInLoggedInUsers(authToken)) {
             response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
+
             return;
         }
 
         Optional<User> authorizedUser = UserManager.findUserWithAuthToken(authToken);
 
         if (authorizedUser.isEmpty()) {
-            response.setStatus(401); // Unauthorized, no such user in token cache
+            response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
             return;
         }
 
@@ -137,21 +151,24 @@ public class WorkspaceHandler extends Handler.Abstract {
         } catch (IOException e) {
             e.printStackTrace();
             response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't read request content"), callback);
             return;
         }
 
         Workspace workspace = gson.fromJson(requestJson, Workspace.class);
 
         if (!workspace.getMemberIds().contains(authorizedUser.get().getId())) {
-            response.setStatus(401); // Unauthorized, user not in workspace
+            response.setStatus(403); // Forbidden, user not in workspace
+            response.write(true, StandardCharsets.UTF_8.encode("Not authorized to access resource"), callback);
             return;
         }
 
         try {
-            ServerJsonManager.writeWorkspaceData(workspace, false);
+            ServerJsonManager.writeWorkspaceData(workspace);
         } catch (IOException e) {
             e.printStackTrace();
             response.setStatus(500); // Server error
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspace data"), callback);
             return;
         }
 

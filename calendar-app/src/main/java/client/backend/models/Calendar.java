@@ -160,6 +160,10 @@ public class Calendar implements Savable<Calendar> {
         return this;
     }
 
+    public ArrayList<String> getMemberIds() {
+        return this.memberIds;
+    }
+
     public Workspace getWorkspace() {
         return this.workspace;
     }

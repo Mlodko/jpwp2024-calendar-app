@@ -34,20 +34,17 @@ public class WorkspaceHandler extends Handler.Abstract {
             // Only sends workspace.json
             case "GET" -> {
                 synchronizeClientToServer(request, response, callback);
-                callback.succeeded();
-                return true;
             }
             case "POST" -> {
                 synchronizeServerToClient(request, response);
-                callback.succeeded();
-                return true;
             }
             default -> {
                 response.setStatus(400); // Bad request
-                callback.succeeded();
-                return true;
+                response.write(true, StandardCharsets.UTF_8.encode("Unsupported HTTP method, use GET or POST"), callback);
             }
         }
+        callback.succeeded();
+        return true;
     }
 
     private void synchronizeClientToServer(Request request, Response response, Callback callback) throws Exception {
@@ -57,12 +54,16 @@ public class WorkspaceHandler extends Handler.Abstract {
         // No auth header
         if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
             response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
             return;
         }
 
         // If no id given or two fields at the same time given
-        if (!(parameterNames.contains("id") && parameterNames.contains("ids"))) {
+        if (parameterNames.contains("id") == parameterNames.contains("ids")) {
+            //                           ^^^
+            //                          This is a XOR you dumbfucks
             response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("No \"id\" or \"ids\" parameter or provided both at the same time"), callback);
             return;
         }
 
@@ -73,6 +74,7 @@ public class WorkspaceHandler extends Handler.Abstract {
 
         if (goodUser.isEmpty()) {
             response.setStatus(401);
+            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
             return;
         }
 

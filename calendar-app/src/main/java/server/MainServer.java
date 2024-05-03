@@ -5,10 +5,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import server.handlers.CardHandler;
-import server.handlers.LoginHandler;
-import server.handlers.RegisterHandler;
-import server.handlers.WorkspaceHandler;
+import server.handlers.*;
 
 public class MainServer {
 
@@ -30,10 +27,12 @@ public class MainServer {
 
         ContextHandlerCollection contextCollection = new ContextHandlerCollection();
 
-        contextCollection.addHandler(new ContextHandler(new CardHandler(), "/cards"));
         contextCollection.addHandler(new ContextHandler(new LoginHandler(), "/login"));
         contextCollection.addHandler(new ContextHandler(new RegisterHandler(), "/register"));
         contextCollection.addHandler(new ContextHandler(new WorkspaceHandler(), "/workspace"));
+        contextCollection.addHandler(new ContextHandler(new CalendarHandler(), "/calendar"));
+        contextCollection.addHandler(new ContextHandler(new BoardHandler(), "/board"));
+        contextCollection.addHandler(new ContextHandler(new CardHandler(), "/cards"));
 
         server.setHandler(contextCollection);
 

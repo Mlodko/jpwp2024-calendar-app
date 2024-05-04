@@ -312,7 +312,7 @@ public class ServerJsonManager {
     //region Updating data
 
     public static boolean addToUsers(User user) {
-        ArrayList<User> users = null;
+        ArrayList<User> users;
         try {
             users = readUsersData();
             if(users.stream().map(User::getId).toList().contains(user.getId())) {

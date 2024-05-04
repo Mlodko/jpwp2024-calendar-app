@@ -7,6 +7,8 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import server.handlers.*;
 
+import java.io.File;
+
 public class MainServer {
 
     // TODO token authentication
@@ -37,9 +39,33 @@ public class MainServer {
         server.setHandler(contextCollection);
 
         try {
+            setupDirs();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
             server.start();
         } catch (Exception e) {
-            System.out.println("Server started - unknown error occurred, couldn't start [MainServer -> server.start()]");
+            System.out.println("Server didn't start - unknown error occurred [MainServer -> server.start()]");
+        }
+    }
+
+    // check if required files and directories exist, if no - do create them silly bitch
+    private static void setupDirs() throws Exception {
+        String root = ServerJsonManager.getRootDirectoryPath().getParent().toString();
+        File file = new File(root + "/users.json");
+
+        if (!file.exists()) {
+            if (!file.getParentFile().mkdirs() && !file.createNewFile())
+                throw new Exception("/users.json file doesn't exist and couldn't be created");
+        }
+
+        file = new File(root + "/workspaces");
+
+        if (!file.exists()) {
+            if (!file.getParentFile().mkdirs() && !file.mkdir())
+                throw new Exception("/workspace directory doesn't exist and couldn't be created");
         }
     }
 

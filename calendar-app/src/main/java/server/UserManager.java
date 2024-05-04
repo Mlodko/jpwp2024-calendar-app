@@ -54,7 +54,6 @@ public class UserManager {
         User user = new User(username, passwordHash, email);
         user.setAuthToken(UUID.randomUUID().toString());
 
-
         if(!ServerJsonManager.addToUsers(user)) {
             // Saving to users.json failed
             return Optional.empty();
@@ -80,6 +79,11 @@ public class UserManager {
 
     public static Optional<User> findUserWithAuthToken(String authToken) {
         return loggedInUsers.stream().filter(user -> user.getAuthToken().equals(authToken)).findFirst();
+    }
+
+    public static void main(String[] args) {
+        Optional<User> optUsr = new UserManager().registerUser("a", "b", "c");
+        System.out.println(optUsr.get().getUsername());
     }
 
 }

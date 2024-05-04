@@ -39,9 +39,11 @@ public class RequestManager implements AutoCloseable {
     public Optional<User> makeLoginRequest(User user) {
         Optional<User> loggedInUser = Optional.empty();
         InputStreamResponseListener listener = new InputStreamResponseListener();
+
         httpClient.POST(SERVER_URL + "/login/")
                 .body(new StringRequestContent("application/json", gson.toJson(user)))
                 .send(listener);
+
         try {
             Response response = listener.get(5, TimeUnit.SECONDS);
             if (response.getStatus() == HttpStatus.OK_200) {
@@ -50,10 +52,10 @@ public class RequestManager implements AutoCloseable {
                             new InputStreamReader(content, StandardCharsets.UTF_8))
                             .lines()
                             .collect(Collectors.joining("\n"));
+
                     User authenticatedUser = gson.fromJson(json, User.class);
                     listener.get(5, TimeUnit.SECONDS).getHeaders().get(HttpHeader.AUTHORIZATION);
                     loggedInUser = Optional.of(authenticatedUser);
-
                 }
             }
             else {
@@ -78,14 +80,18 @@ public class RequestManager implements AutoCloseable {
         httpClient.POST(SERVER_URL + "/register/")
                 .body(new StringRequestContent("application/json", gson.toJson(temp)))
                 .send(listener);
+
         try {
             Response response = listener.get(5, TimeUnit.SECONDS);
+
             if (response.getStatus() == HttpStatus.OK_200) {
                 try(InputStream content = listener.getInputStream()) {
+
                     String json = new BufferedReader(
                             new InputStreamReader(content, StandardCharsets.UTF_8))
                             .lines()
                             .collect(Collectors.joining("\n"));
+
                     listener.get(5, TimeUnit.SECONDS).getHeaders().get(HttpHeader.AUTHORIZATION);
                     loggedInUser = Optional.of(gson.fromJson(json, User.class));
                 }
@@ -152,5 +158,15 @@ public class RequestManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         httpClient.stop();
+    }
+
+    // for debugging purposes
+    public static void main(String[] args) {
+        try {
+            Optional<User> optUsr = User.register("bob", "bob12345", "bob@watykan.it");
+        } catch (Exception e) {
+            System.out.println("mam wylew");
+            e.printStackTrace();
+        }
     }
 }

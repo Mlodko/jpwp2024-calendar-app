@@ -196,7 +196,7 @@ public class LoginView {
                 alert.showAndWait();
                 return;
             }
-            registerButton.getScene().getWindow().hide();
+            okButton.getScene().getWindow().hide();
             mainStage.show();
         });
 

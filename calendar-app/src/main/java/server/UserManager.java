@@ -9,14 +9,12 @@ import java.util.UUID;
 
 public class UserManager {
     // hold ALL USERS since the beginning
-    private ArrayList<User> userCache;
+    private static ArrayList<User> userCache;
     private static final ArrayList<User> loggedInUsers = new ArrayList<>();
 
     public UserManager() {
-        try {
-            this.userCache = ServerJsonManager.readUsersData();
-        } catch(IOException e) {
-            e.printStackTrace();
+        if(userCache == null || userCache.isEmpty()) {
+            updateUserCache();
         }
     }
     
@@ -25,7 +23,7 @@ public class UserManager {
 
         if(loggedInUser.isPresent()) {
             loggedInUser.get().setAuthToken(UUID.randomUUID().toString());
-            this.loggedInUsers.add(loggedInUser.get());
+            loggedInUsers.add(loggedInUser.get());
         }
 
         return loggedInUser;
@@ -67,7 +65,7 @@ public class UserManager {
 
     public void updateUserCache() {
         try {
-            this.userCache = ServerJsonManager.readUsersData();
+            userCache = ServerJsonManager.readUsersData();
         } catch(IOException e) {
             e.printStackTrace();
         }

@@ -1,8 +1,10 @@
 package com.example.calendarapp;
 
 import client.backend.models.Calendar;
+import client.backend.models.User;
 import client.frontend.CalendarFXFactory;
 import client.frontend.LoginView;
+import client.frontend.MainView;
 import com.calendarfx.model.CalendarSource;
 import com.calendarfx.view.CalendarView;
 import javafx.application.Application;
@@ -26,14 +28,9 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        //Parent fxmlLoader = FXMLLoader.load(LoginView.class.getResource("calendarView.fxml"));
         // TODO webview
         WebView webView = new WebView();
-        WebEngine webEngine = webView.getEngine();
-
-
         CalendarView calendarView = new CalendarView();
-        // TODO if there are no calendars available, the app will crash :)
         //ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readWorkspace();
         ArrayList<Calendar> myCalendars = new ArrayList<Calendar>();
         // Delete default calendar source
@@ -46,11 +43,9 @@ public class HelloApplication extends Application {
 
         SplitPane splitPane = new SplitPane();
         splitPane.getItems().addAll(calendarView);
-
-        Scene scene = new Scene(splitPane, 1280, 720);
-        //scene.getStylesheets().add(LoginView.class.getResource("login-view.css").toExternalForm());
         stage.setTitle("Hello!");
-        stage.setScene(new LoginView().createLoginScene());
+        //stage.setScene(new LoginView().createLoginScene());
+        stage.setScene(new MainView().createCalendarView(new User("Aleksander B", "alkohol")));
         stage.show();
     }
 

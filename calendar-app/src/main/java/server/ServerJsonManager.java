@@ -29,6 +29,7 @@ public class ServerJsonManager {
     public static String getRootDirectory() {
         return rootDir.toString();
     }
+    public static Path getRootDirectoryPath() { return rootDir; }
 
     //region READERS
 
@@ -185,7 +186,12 @@ public class ServerJsonManager {
         }
 
         Type userArrayType = new TypeToken<ArrayList<User>>(){}.getType();
-        return gson.fromJson(Files.readString(usersFile.toPath()), userArrayType);
+        String jsonString = Files.readString(usersFile.toPath());
+
+        if (jsonString.isEmpty())
+            return new ArrayList<>();
+        else
+            return gson.fromJson(jsonString, userArrayType);
     }
 
     //endregion
@@ -288,6 +294,8 @@ public class ServerJsonManager {
 
     public static void writeUserData(ArrayList<User> users) throws IOException {
         File userFile = new File(rootDir.getParent() + "/users.json");
+
+        System.out.println("input users arraylist size: " + users.size());
         
         if (!userFile.exists()) {
             userFile.createNewFile();
@@ -310,6 +318,7 @@ public class ServerJsonManager {
             if(users.stream().map(User::getId).toList().contains(user.getId())) {
                 return false;
             }
+            users.add(user);
             writeUserData(users);
         } catch (IOException e) {
             return false;
@@ -346,6 +355,11 @@ public class ServerJsonManager {
         ArrayList<Calendar> calendars = new ArrayList<>(List.of(
                 new Calendar(orphanCards, boards, users, workspace)
         ));
+
+        ArrayList<User> existingUsers = readUsersData();
+
+        for (User usr : existingUsers)
+            System.out.println(usr.getUsername());
 
         workspace.setCalendars(calendars);
         boards.get(0).setCalendar(calendars.get(0));

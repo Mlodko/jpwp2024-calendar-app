@@ -22,15 +22,16 @@ import java.util.ArrayList;
 
 public class HelloApplication extends Application {
 
+    //private static final Font font = new Font("file:/resources/client.frontend/Roboto-Medium.tff", 22);
+
     @Override
     public void start(Stage stage) throws IOException {
-        Parent fxmlLoader = FXMLLoader.load(LoginView.class.getResource("calendarView.fxml"));
+        //Parent fxmlLoader = FXMLLoader.load(LoginView.class.getResource("calendarView.fxml"));
         // TODO webview
         WebView webView = new WebView();
         WebEngine webEngine = webView.getEngine();
 
 
-        Font font = new Font("file:/resources/client.frontend/Roboto-Medium.tff", 22);
         CalendarView calendarView = new CalendarView();
         // TODO if there are no calendars available, the app will crash :)
         //ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readWorkspace();

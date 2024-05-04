@@ -78,10 +78,4 @@ public class UserManager {
     public static Optional<User> findUserWithAuthToken(String authToken) {
         return loggedInUsers.stream().filter(user -> user.getAuthToken().equals(authToken)).findFirst();
     }
-
-    public static void main(String[] args) {
-        Optional<User> optUsr = new UserManager().registerUser("a", "b", "c");
-        System.out.println(optUsr.get().getUsername());
-    }
-
 }

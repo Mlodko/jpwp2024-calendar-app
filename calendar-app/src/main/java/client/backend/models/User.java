@@ -23,8 +23,6 @@ public class User implements Savable<User>{
     String password;
     String authToken; // Token that the server sends on login, used to authenticate the user from now on
 
-
-
     static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     // TODO permissions

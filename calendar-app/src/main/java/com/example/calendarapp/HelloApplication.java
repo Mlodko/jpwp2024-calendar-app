@@ -29,9 +29,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         // TODO webview
-        WebView webView = new WebView();
         CalendarView calendarView = new CalendarView();
-        //ArrayList<client.backend.models.Calendar> myCalendars = JsonManager.readWorkspace();
         ArrayList<Calendar> myCalendars = new ArrayList<Calendar>();
         // Delete default calendar source
         calendarView.getCalendarSources().clear();
@@ -44,8 +42,8 @@ public class HelloApplication extends Application {
         SplitPane splitPane = new SplitPane();
         splitPane.getItems().addAll(calendarView);
         stage.setTitle("Hello!");
-        //stage.setScene(new LoginView().createLoginScene());
-        stage.setScene(new MainView().createCalendarView(new User("Aleksander B", "alkohol")));
+        stage.setScene(new LoginView().createLoginScene());
+        //stage.setScene(new MainView().createCalendarView(new User("Aleksander B", "alkohol")));
         stage.show();
     }
 

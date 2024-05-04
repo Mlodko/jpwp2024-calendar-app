@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -203,16 +204,51 @@ public class LoginView {
         return new Scene(gridPane);
     }
 
+    // TODO needs fucking rework
+    private Scene chooseWorkspace(User user) {
+        Button cancel = new Button("Cancel");
+        cancel.setOnAction(event -> {
+            Stage loginStage = new Stage();
+            loginStage.setTitle("Login");
+            loginStage.setScene(createLoginScene());
+            cancel.getScene().getWindow().hide();
+            loginStage.show();
+        });
+
+        MenuButton choice = new MenuButton("Choose your workspace:");
+        ArrayList<String> workspaceIDs = new ArrayList<>(); // here read all user's workspace ids
+
+        for (String id : workspaceIDs) {
+            MenuItem tmp = new MenuItem(id);
+
+            tmp.setOnAction(event -> {
+                Stage mainStage = new Stage();
+                mainStage.setTitle("Calendar App");
+
+                try {
+                    mainStage.setScene(new MainView().createCalendarView(user));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.")
+                            .showAndWait();
+                    return;
+                }
+                loginButton.getScene().getWindow().hide();
+                mainStage.show();
+
+            });
+
+            choice.getItems().add(tmp);
+        }
+
+        VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        vbox.getChildren().addAll(choice, cancel);
+
+        return new Scene(vbox);
+    }
+
     private static boolean isEmail(String email) {
         return Pattern.matches("^(.+)@(\\S+)$", email);
     }
-
-    private static void createLoginWindow() {
-
-    }
-
-    /*
-    private static Optional<User> login(String username, String password) {
-
-    }*/
 }

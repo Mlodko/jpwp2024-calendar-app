@@ -112,7 +112,7 @@ public class RequestManager implements AutoCloseable {
         return loggedInUser;
     }
 
-    public Optional<ArrayList<Workspace>> getWorkspaces(String... ids) {
+    public Optional<ArrayList<Workspace>> getWorkspaces(String... ids) { // ids meaning workspace-ids
         InputStreamResponseListener listener = new InputStreamResponseListener();
         ContentResponse content;
 
@@ -158,15 +158,5 @@ public class RequestManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         httpClient.stop();
-    }
-
-    // for debugging purposes
-    public static void main(String[] args) {
-        try {
-            Optional<User> optUsr = User.register("bob", "bob12345", "bob@watykan.it");
-        } catch (Exception e) {
-            System.out.println("mam wylew");
-            e.printStackTrace();
-        }
     }
 }

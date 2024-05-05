@@ -14,6 +14,7 @@ public class Calendar implements Savable<Calendar> {
     private ArrayList<KanbanBoard> kanbanBoards;
     @Expose private ArrayList<String> kanbanIds;
     private ArrayList<Card> orphanCards;
+    @Expose private ArrayList<String> orphanIds;
 
     private ArrayList<User> members;
 
@@ -38,6 +39,7 @@ public class Calendar implements Savable<Calendar> {
     public Calendar(String id, ArrayList<Card> orphanCards, ArrayList<KanbanBoard> kanbanBoards, ArrayList<User> members, Workspace workspace) {
         this.id = id;
         this.orphanCards = orphanCards;
+        this.orphanIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         this.kanbanBoards = kanbanBoards;
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         this.members = members;
@@ -51,6 +53,7 @@ public class Calendar implements Savable<Calendar> {
         this.kanbanBoards = kanbanBoards;
         this.kanbanIds = kanbanBoards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new));
         this.orphanCards = orphanCards;
+        this.orphanIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
         this.members = users;
         this.memberIds = users.stream().map(User::getId).collect(Collectors.toCollection(ArrayList::new));
         this.workspace = workspace;
@@ -108,24 +111,39 @@ public class Calendar implements Savable<Calendar> {
         return this.orphanCards;
     }
 
+    public ArrayList<String> getOrphanIds() {
+        return orphanIds;
+    }
+
     public Calendar setOrphanCards(ArrayList<Card> newOrphanCards) {
         this.orphanCards = newOrphanCards;
+        this.orphanIds = orphanCards.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new));
+
         return this;
     }
 
     public Calendar setOrphanCard(Card card, int index) {
         this.orphanCards.set(index, card);
+        this.orphanIds.set(index, card.getId());
         return this;
     }
 
     public Calendar addToOrphanCards(Card newOrphan) {
         this.orphanCards.add(newOrphan);
+        this.orphanIds.add(newOrphan.getId());
+        return this;
+    }
+
+    public Calendar addToOrphanCards(ArrayList<Card> newOrphans) {
+        this.orphanCards.addAll(newOrphans);
+        this.orphanIds.addAll(newOrphans.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new)));
         return this;
     }
 
     public Card[] deleteFromOrphanCards(Predicate<Card> filterFunc) {
         Card[] removedOrphans = this.orphanCards.stream().filter(filterFunc).toArray(Card[]::new);
         this.orphanCards.removeIf(filterFunc);
+        this.orphanIds.removeIf(cardId -> Arrays.stream(removedOrphans).map(Card::getId).toList().contains(cardId));
         return removedOrphans;
     }
 

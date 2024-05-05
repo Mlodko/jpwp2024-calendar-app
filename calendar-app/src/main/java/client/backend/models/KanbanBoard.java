@@ -164,6 +164,10 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         return this;
     }
 
+    public boolean checkIfColumnExists(String columnTitle) {
+        return itemsLists.containsKey(columnTitle);
+    }
+
     public HashMap<String, ArrayList<String>> getItemIds() {
         return this.itemIds;
     }

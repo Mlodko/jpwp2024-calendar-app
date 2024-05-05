@@ -173,6 +173,7 @@ public class MainView {
         addCalendar.setAlignment(Pos.CENTER);
 
         addCalendar.setOnAction(event -> {
+            // TODO handle adding calendar + refresh the view
             System.out.println("addCalendar clicked O.O");
         });
 
@@ -215,31 +216,7 @@ public class MainView {
                 MenuItem tmpItem = new MenuItem(board.getTitle());
 
                 tmpItem.setOnAction(event -> {
-
-                    StackPane kanbanView = new StackPane();
-                    HBox listsBox = new HBox();
-                    listsBox.setSpacing(5);
-                    listsBox.setPadding(new Insets(5, 5, 5, 5));
-
-                    for (Map.Entry<String, ArrayList<Card>> entry : board.getItemsLists().entrySet()) {
-                        VBox mainVBox = new VBox();
-                        mainVBox.setAlignment(Pos.CENTER);
-                        mainVBox.setSpacing(5);
-                        Label nameLbl = new Label(entry.getKey());
-                        VBox cardVBox = new VBox();
-                        cardVBox.setSpacing(3);
-
-                        for (Card card : entry.getValue()) {
-                            Label cardLbl = new Label(card.getTitle());
-                            cardVBox.getChildren().add(cardLbl);
-                        }
-
-                        mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
-                        listsBox.getChildren().add(mainVBox);
-                    }
-
-                    kanbanView.getChildren().add(listsBox);
-                    mainSplitPane.getItems().set(1, kanbanView);
+                    mainSplitPane.getItems().set(1, this.createKanbanView(board));
                 });
 
                 tmp.getItems().add(tmpItem);
@@ -250,6 +227,34 @@ public class MainView {
         }
 
         return vbox;
+    }
+
+    private StackPane createKanbanView(KanbanBoard board) {
+        StackPane kanbanView = new StackPane();
+        HBox listsBox = new HBox();
+        Separator sep = new Separator(Orientation.HORIZONTAL);
+        listsBox.setSpacing(5);
+        listsBox.setPadding(new Insets(5, 5, 5, 5));
+
+        for (Map.Entry<String, ArrayList<Card>> entry : board.getItemsLists().entrySet()) {
+            VBox mainVBox = new VBox();
+            mainVBox.setAlignment(Pos.CENTER);
+            mainVBox.setSpacing(5);
+            Label nameLbl = new Label(entry.getKey());
+            VBox cardVBox = new VBox();
+            cardVBox.setSpacing(3);
+
+            for (Card card : entry.getValue()) {
+                Label cardLbl = new Label(card.getTitle());
+                cardVBox.getChildren().add(cardLbl);
+            }
+
+            mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
+            listsBox.getChildren().add(mainVBox);
+        }
+
+        kanbanView.getChildren().add(listsBox);
+        return kanbanView;
     }
 
 }

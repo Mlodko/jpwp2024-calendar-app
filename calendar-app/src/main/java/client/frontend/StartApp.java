@@ -47,7 +47,7 @@ public class StartApp extends Application {
         cal.setKanbanBoards(boards);
         workspace.addToCalendars(cal);
 
-        // TODO link calendar to user
+        // TODO link workspace to user
 
         //stage.setScene(new MainView().createMainView(new User("Aleksander B", "alkohol"), workspace));
         //stage.setScene(new MainView().createMainView(usr, workspace));

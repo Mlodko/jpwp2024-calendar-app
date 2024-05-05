@@ -6,18 +6,18 @@ import client.backend.models.Calendar;
 import client.backend.models.KanbanBoard;
 import client.backend.models.User;
 import client.backend.models.Workspace;
+import client.frontend.LoginView;
+
 import com.calendarfx.model.CalendarSource;
 import com.calendarfx.view.CalendarView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,31 +35,74 @@ public class MainView {
         HBox hbox = new HBox();
 
         //region MENU BUTTONS
+        MenuButton settings = new MenuButton("Settings");
         Button refresh = new Button("Refresh");
-        Button logOut = new Button("Log out");
         Button calView = new Button("Calendar View");
+        MenuItem logOut = new MenuItem("Log out");
+        MenuItem changeWorkspace = new MenuItem("Change Workspace");
 
         refresh.setOnAction(event -> {
             System.out.println("refresh clicked UwU");
             // handle refresh...
         });
 
-        logOut.setOnAction(event -> {
-            System.out.println("logout clicked OwO");
-            // handle logout, close the main screen and open log in window...
-        });
-
         calView.setOnAction(event -> {
             System.out.println("calView clicked T_T");
-            // handle changing current view to calendar view (all calendars)
+            // handle changing current view to calendar view
         });
+
+        logOut.setOnAction(event -> {
+            if (!loggedInUser.logOut()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
+                alert.showAndWait();
+                return;
+            }
+
+            // TODO logout from server too!
+            JsonManager.removeAllLocalData();
+
+            Stage loginStage = new Stage();
+            loginStage.setTitle("Login");
+
+            try {
+                loginStage.setScene(new LoginView().createLoginScene());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't create login window after the logout");
+                alert.showAndWait();
+                leftRibbon.getScene().getWindow().hide();
+                return;
+            }
+
+            leftRibbon.getScene().getWindow().hide();
+            loginStage.show();
+        });
+
+        changeWorkspace.setOnAction(event -> {
+            Stage workspaceStage = new Stage();
+            workspaceStage.setTitle("Choose your workspace");
+
+            try {
+                workspaceStage.setScene(new LoginView().chooseWorkspace(loggedInUser));
+            } catch (Exception e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't load workspaces and open the selection window");
+                alert.showAndWait();
+                return;
+            }
+
+            leftRibbon.getScene().getWindow().hide();
+            workspaceStage.show();
+        });
+
+        settings.getItems().addAll(logOut, changeWorkspace);
         //endregion
 
         vbox.setAlignment(Pos.TOP_CENTER);
         hbox.setAlignment(Pos.TOP_CENTER);
 
         hbox.setSpacing(5);
-        hbox.getChildren().addAll(calView, refresh, logOut);
+        hbox.getChildren().addAll(calView, refresh, settings);
 
         VBox calKanbanVbox = this.readCalKanbanList(loggedInUser);
         vbox.getChildren().addAll(hbox, calKanbanVbox);
@@ -97,7 +140,6 @@ public class MainView {
                 * ...
                 ...
              - but how to refresh that shit???
-             - next to the menu button shall be a checkbox to select if one want to see this cal or not???
              - still idfk how to refresh that shit
          */
 
@@ -106,6 +148,13 @@ public class MainView {
 
             for (KanbanBoard board : cal.getKanbanBoards()) {
                 MenuItem tmpItem = new MenuItem(board.getTitle());
+
+                tmpItem.setOnAction(event -> {
+
+                    // TODO make kanbanview on this particual kanbanboard
+
+                });
+
                 tmp.getItems().add(tmpItem);
             }
 

@@ -119,6 +119,15 @@ public class User implements Savable<User>{
 
     //endregion
 
+    public boolean logOut() {
+        // if registered user still has a valid token -> remove the token and logout
+        // remove the user from server cache
+        // remove their token from server cache
+        // return tru
+        // if any other -> false
+        return true;
+    }
+
     @Override
     public User loadFromString(String json_text) {
         return gson.fromJson(json_text, User.class);

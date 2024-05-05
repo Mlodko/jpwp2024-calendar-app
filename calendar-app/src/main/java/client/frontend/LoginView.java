@@ -58,23 +58,26 @@ public class LoginView {
                 return;
             }
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Succesfully logged in!\n" +
+            /*
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Successfully logged in!\n" +
                     "Username: " + loggedInUser.get().getUsername() +
                     "Email: " + loggedInUser.get().getEmail(), ButtonType.OK);
             alert.showAndWait();
+            */
 
-            Stage mainStage = new Stage();
-            mainStage.setTitle("Calendar App");
+            Stage workspaceStage = new Stage();
+            workspaceStage.setTitle("Choose your workspace");
+
             try {
-                mainStage.setScene(new MainView().createCalendarView(loggedInUser.get()));
-            } catch (IOException e) {
+                workspaceStage.setScene(new LoginView().chooseWorkspace(loggedInUser.get()));
+            } catch (Exception e) {
                 e.printStackTrace();
-                new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.")
-                .showAndWait();
+                new Alert(Alert.AlertType.ERROR, "Couldn't read workspaces and open selection window").showAndWait();
                 return;
             }
+
             loginButton.getScene().getWindow().hide();
-            mainStage.show();
+            workspaceStage.show();
         });
 
         registerButton.setOnAction(event -> {
@@ -204,10 +207,12 @@ public class LoginView {
         return new Scene(gridPane);
     }
 
-    // TODO needs fucking rework
-    private Scene chooseWorkspace(User user) {
+    public Scene chooseWorkspace(User user) {
         Button cancel = new Button("Cancel");
+
         cancel.setOnAction(event -> {
+            // TODO logout the user
+
             Stage loginStage = new Stage();
             loginStage.setTitle("Login");
             loginStage.setScene(createLoginScene());
@@ -222,10 +227,12 @@ public class LoginView {
             MenuItem tmp = new MenuItem(id);
 
             tmp.setOnAction(event -> {
+                // TODO read "tmp.getText()" workspace
+
                 Stage mainStage = new Stage();
                 mainStage.setTitle("Calendar App");
 
-                try {
+                try { // TODO somehow download the workspace to local and load it
                     mainStage.setScene(new MainView().createCalendarView(user));
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -233,9 +240,9 @@ public class LoginView {
                             .showAndWait();
                     return;
                 }
+
                 loginButton.getScene().getWindow().hide();
                 mainStage.show();
-
             });
 
             choice.getItems().add(tmp);

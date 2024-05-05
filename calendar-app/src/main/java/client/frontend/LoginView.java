@@ -2,6 +2,7 @@ package client.frontend;
 
 import client.backend.JsonManager;
 import client.backend.models.User;
+import client.backend.models.Workspace;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -194,7 +195,7 @@ public class LoginView {
             Stage mainStage = new Stage();
             mainStage.setTitle("Calendar App");
             try {
-                mainStage.setScene(new MainView().createCalendarView(registeredUser.get()));
+                mainStage.setScene(new MainView().createMainView(registeredUser.get(), new Workspace("Default", "Default")));
             } catch (IOException e) {
                 e.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.");
@@ -209,7 +210,7 @@ public class LoginView {
     }
 
     public Scene chooseWorkspace(User user) {
-        Button cancel = new Button("Cancel");
+        Button cancel = new Button("Log out");
         cancel.setOnAction(event -> {
             if (!user.logOut()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
@@ -217,7 +218,7 @@ public class LoginView {
                 return;
             }
 
-            // TODO logout from server too!
+            // TODO try (RequestManager manager = new ...) { manager.logout(thisUser); } ...
             JsonManager.removeAllLocalData();
 
             Stage loginStage = new Stage();
@@ -249,8 +250,11 @@ public class LoginView {
                 Stage mainStage = new Stage();
                 mainStage.setTitle("Calendar App");
 
+                Workspace selected;
+
                 try { // TODO somehow download the workspace to local and load it
-                    mainStage.setScene(new MainView().createCalendarView(user));
+                    selected = new Workspace("dupa", "dupa");
+                    mainStage.setScene(new MainView().createMainView(user, selected));
                 } catch (IOException e) {
                     e.printStackTrace();
                     new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.")

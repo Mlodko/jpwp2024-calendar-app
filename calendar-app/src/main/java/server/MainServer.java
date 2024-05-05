@@ -34,7 +34,7 @@ public class MainServer {
         contextCollection.addHandler(new ContextHandler(new WorkspaceHandler(), "/workspace"));
         contextCollection.addHandler(new ContextHandler(new CalendarHandler(), "/calendar"));
         contextCollection.addHandler(new ContextHandler(new BoardHandler(), "/board"));
-        contextCollection.addHandler(new ContextHandler(new CardHandler(), "/cards"));
+        contextCollection.addHandler(new ContextHandler(new CardHandler(), "/card"));
 
         server.setHandler(contextCollection);
 

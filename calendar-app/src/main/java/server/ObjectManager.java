@@ -4,7 +4,9 @@ import client.backend.models.Calendar;
 import client.backend.models.KanbanBoard;
 import client.backend.models.Workspace;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ObjectManager {
@@ -31,6 +33,24 @@ public class ObjectManager {
 
     public static void refreshWorkspaces() {
         workspaces = ServerJsonManager.readALLdata();
+    }
+
+    public static boolean writeWorkspaceFromCache(String workspaceId) {
+        Optional<Workspace> workspace = workspaces.stream()
+                .filter(wrkspc -> wrkspc.getId().equals(workspaceId))
+                .findFirst();
+
+        if(workspace.isEmpty()) {
+            return false;
+        }
+        try {
+            ServerJsonManager.writeALLdata(workspace.get());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public static void main(String[] args) {

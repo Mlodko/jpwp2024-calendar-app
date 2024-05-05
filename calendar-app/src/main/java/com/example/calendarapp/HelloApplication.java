@@ -1,7 +1,6 @@
 package com.example.calendarapp;
 
-import client.backend.models.Calendar;
-import client.backend.models.User;
+import client.backend.models.*;
 import client.frontend.CalendarFXFactory;
 import client.frontend.LoginView;
 import client.frontend.MainView;
@@ -19,8 +18,9 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
-// TODO find a way to add button to a buttonbar ???
 
 public class HelloApplication extends Application {
 
@@ -28,22 +28,39 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        // TODO webview
-        CalendarView calendarView = new CalendarView();
-        ArrayList<Calendar> myCalendars = new ArrayList<Calendar>();
-        // Delete default calendar source
-        calendarView.getCalendarSources().clear();
+        stage.setTitle("Login");
+        //stage.setScene(new LoginView().createLoginScene());
 
-        for(client.backend.models.Calendar calendar : myCalendars) {
-            CalendarSource source = CalendarFXFactory.create(calendar);
-            calendarView.getCalendarSources().add(source);
+        User usr = new User("bob", "bobowski");
+
+        Workspace workspace = new Workspace("dupa", "dupa");
+        Calendar cal = new Calendar("id2137");
+        HashMap<String, ArrayList<Card>> items = new HashMap<>();
+        ArrayList<Card> cards = new ArrayList<>();
+
+        ArrayList<KanbanBoard> boards = new ArrayList<>();
+
+        for (int j = 3; j < 8; j++) {
+            Card tmpCard = new Card("dupa" + String.valueOf(j));
+            cards.add(tmpCard);
         }
 
-        SplitPane splitPane = new SplitPane();
-        splitPane.getItems().addAll(calendarView);
-        stage.setTitle("Hello!");
-        stage.setScene(new LoginView().createLoginScene());
-        //stage.setScene(new MainView().createCalendarView(new User("Aleksander B", "alkohol")));
+        items.put("key1337", cards);
+
+        for (int i = 0; i < 3; i++) {
+            KanbanBoard tmpBoard = new KanbanBoard(
+                    String.valueOf(i), "nazwa" + String.valueOf(i), new Date(), new Date(), cal, new Date(), new Date(), items
+            );
+            boards.add(tmpBoard);
+        }
+
+        cal.setKanbanBoards(boards);
+        workspace.addToCalendars(cal);
+
+        // TODO link calendar to user
+
+        //stage.setScene(new MainView().createMainView(new User("Aleksander B", "alkohol"), workspace));
+        stage.setScene(new MainView().createMainView(usr, workspace));
         stage.show();
     }
 

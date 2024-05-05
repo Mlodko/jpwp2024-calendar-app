@@ -2,36 +2,46 @@ package client.frontend;
 
 import client.backend.JsonManager;
 import client.backend.RequestManager;
-import client.backend.models.Calendar;
-import client.backend.models.KanbanBoard;
-import client.backend.models.User;
-import client.backend.models.Workspace;
+import client.backend.models.*;
 import client.frontend.LoginView;
 
 import com.calendarfx.model.CalendarSource;
 import com.calendarfx.view.CalendarView;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 public class MainView {
 
-    private StackPane setupLeftPane(User loggedInUser, SplitPane splitPane) {
+    public Scene createMainView(User loggedInUser, Workspace selectedWorkspace) throws IOException {
+        SplitPane splitPane = new SplitPane();
+        StackPane leftRibbon = this.setupLeftPane(loggedInUser, selectedWorkspace, splitPane);
+        CalendarView calendarView = this.createCalendarView(loggedInUser);
+
+        splitPane.getItems().addAll(leftRibbon, calendarView);
+        splitPane.setDividerPosition(0, 0.22);
+
+        return new Scene(splitPane, 1280, 720);
+    }
+
+    private StackPane setupLeftPane(User loggedInUser, Workspace selectedWorkspace, SplitPane splitPane) {
 
         StackPane leftRibbon = new StackPane();
-        leftRibbon.minWidthProperty().bind(splitPane.widthProperty().multiply(0.2)); //sets minimum width for the ribbon
+        leftRibbon.minWidthProperty().bind(splitPane.widthProperty().multiply(0.22)); //sets minimum width for the ribbon
         leftRibbon.maxWidthProperty().bind(splitPane.widthProperty().multiply(0.35)); //sets maximum width for the ribbon
 
         VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        vbox.setPadding(new Insets(5,5,5,5));
         HBox hbox = new HBox();
 
         //region MENU BUTTONS
@@ -43,22 +53,30 @@ public class MainView {
 
         refresh.setOnAction(event -> {
             System.out.println("refresh clicked UwU");
+            StackPane tmp = new StackPane();
+            Label lbl = new Label("big boobs");
+            tmp.getChildren().add(lbl);
+            splitPane.getItems().set(1, tmp);
             // handle refresh...
         });
 
         calView.setOnAction(event -> {
-            System.out.println("calView clicked T_T");
-            // handle changing current view to calendar view
+            // TODO check for issues later
+            CalendarView calendar = this.createCalendarView(loggedInUser);
+            splitPane.getItems().set(1, calendar);
         });
 
         logOut.setOnAction(event -> {
+
+            // TODO save all work to server, then logout from server and clear local data
+            // TODO logout locally too!
+
             if (!loggedInUser.logOut()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
                 alert.showAndWait();
                 return;
             }
 
-            // TODO logout from server too!
             JsonManager.removeAllLocalData();
 
             Stage loginStage = new Stage();
@@ -102,9 +120,10 @@ public class MainView {
         hbox.setAlignment(Pos.TOP_CENTER);
 
         hbox.setSpacing(5);
+        hbox.setPadding(new Insets(5,5,5,5));
         hbox.getChildren().addAll(calView, refresh, settings);
 
-        VBox calKanbanVbox = this.readCalKanbanList(loggedInUser);
+        VBox calKanbanVbox = this.readCalKanbanList(loggedInUser, splitPane);
         vbox.getChildren().addAll(hbox, calKanbanVbox);
         leftRibbon.setPadding(new Insets(10,10,10,10));
         leftRibbon.getChildren().addAll(vbox);
@@ -112,19 +131,55 @@ public class MainView {
         return leftRibbon;
     }
 
-    private VBox readCalKanbanList(User user) {
+    private CalendarView createCalendarView(User loggedInUser) {
+        CalendarView calendarView = new CalendarView();
+        ArrayList<Calendar> myCalendars = new ArrayList<>(); //JsonManager.readWorkspace();
+
+        // Delete default calendar source
+        calendarView.getCalendarSources().clear();
+
+        for(client.backend.models.Calendar calendar : myCalendars) {
+            CalendarSource source = CalendarFXFactory.create(calendar);
+            calendarView.getCalendarSources().add(source);
+        }
+
+        return calendarView;
+    }
+
+    private VBox readCalKanbanList(User user, SplitPane mainSplitPane) {
         ArrayList<client.backend.models.Calendar> usrCalendars = new ArrayList<>();
 
         try (RequestManager manager = new RequestManager()) {
 
-
+            // TODO there ya manager.read
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         VBox vbox = new VBox();
-        vbox.setSpacing(5);
+        vbox.setSpacing(8);
+
+        HBox littleBar = new HBox();
+        littleBar.setAlignment(Pos.CENTER);
+        littleBar.setSpacing(5);
+        littleBar.setPadding(new Insets(5,5,5,5));
+        AnchorPane forText = new AnchorPane();
+        Label text = new Label("Your calendars");
+        text.setAlignment(Pos.CENTER);
+        forText.getChildren().add(text);
+        Button addCalendar = new Button("Add New Calendar");
+        addCalendar.setAlignment(Pos.CENTER);
+
+        addCalendar.setOnAction(event -> {
+            System.out.println("addCalendar clicked O.O");
+        });
+
+        Separator sep = new Separator(Orientation.HORIZONTAL);
+
+        HBox.setHgrow(forText, Priority.ALWAYS);
+        littleBar.getChildren().addAll(forText, addCalendar);
+        vbox.getChildren().addAll(sep , littleBar);
 
         // maybe with menu buttons?
         /*
@@ -151,8 +206,30 @@ public class MainView {
 
                 tmpItem.setOnAction(event -> {
 
-                    // TODO make kanbanview on this particual kanbanboard
+                    StackPane kanbanView = new StackPane();
+                    HBox listsBox = new HBox();
+                    listsBox.setSpacing(5);
+                    listsBox.setPadding(new Insets(5, 5, 5, 5));
 
+                    for (Map.Entry<String, ArrayList<Card>> entry : board.getItemsLists().entrySet()) {
+                        VBox mainVBox = new VBox();
+                        mainVBox.setAlignment(Pos.CENTER);
+                        mainVBox.setSpacing(5);
+                        Label nameLbl = new Label(entry.getKey());
+                        VBox cardVBox = new VBox();
+                        cardVBox.setSpacing(3);
+
+                        for (Card card : entry.getValue()) {
+                            Label cardLbl = new Label(card.getTitle());
+                            cardVBox.getChildren().add(cardLbl);
+                        }
+
+                        mainVBox.getChildren().addAll(nameLbl, cardVBox);
+                        listsBox.getChildren().add(mainVBox);
+                    }
+
+                    kanbanView.getChildren().add(listsBox);
+                    mainSplitPane.getItems().set(1, kanbanView);
                 });
 
                 tmp.getItems().add(tmpItem);
@@ -162,25 +239,5 @@ public class MainView {
         }
 
         return vbox;
-    }
-
-    public Scene createCalendarView(User loggedInUser) throws IOException {
-        CalendarView calendarView = new CalendarView();
-        ArrayList<Calendar> myCalendars = new ArrayList<>(); //JsonManager.readWorkspace();
-
-        // Delete default calendar source
-        calendarView.getCalendarSources().clear();
-
-        for(client.backend.models.Calendar calendar : myCalendars) {
-            CalendarSource source = CalendarFXFactory.create(calendar);
-            calendarView.getCalendarSources().add(source);
-        }
-
-        SplitPane splitPane = new SplitPane();
-        StackPane leftRibbon = this.setupLeftPane(loggedInUser, splitPane);
-        splitPane.getItems().addAll(leftRibbon, calendarView);
-        splitPane.setDividerPosition(0, 0.2);
-
-        return new Scene(splitPane, 1280, 720);
     }
 }

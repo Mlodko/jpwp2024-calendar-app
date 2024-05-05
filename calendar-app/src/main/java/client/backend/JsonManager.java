@@ -28,6 +28,27 @@ public class JsonManager {
         return rootDir.toString();
     }
 
+    public static void removeAllLocalData() {
+        File file = new File(rootDir + "/workspace");
+
+        if (!file.exists()) {
+            file.mkdir();
+            return;
+        }
+
+        purge(file);
+    }
+
+    private static void purge(File file) {
+        if (file.listFiles() != null) {
+            for (File tmp : file.listFiles()) {
+                if (tmp.isDirectory())
+                    purge(tmp);
+                tmp.delete();
+            }
+        }
+    }
+
     //region READERS
 
     public static Workspace readCompleteWorkspaceData() throws Exception {

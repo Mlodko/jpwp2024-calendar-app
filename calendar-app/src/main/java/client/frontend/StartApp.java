@@ -21,7 +21,7 @@ public class StartApp extends Application {
 
         User usr = new User("bob", "bobowski");
 
-        Workspace workspace = new Workspace("dupa", "dupa");
+        Workspace workspace = new Workspace("sjjs", "dupa");
         Calendar cal = new Calendar("id2137");
         HashMap<String, ArrayList<Card>> items = new HashMap<>();
         ArrayList<Card> cards = new ArrayList<>();
@@ -30,6 +30,8 @@ public class StartApp extends Application {
 
         for (int j = 3; j < 8; j++) {
             Card tmpCard = new Card("dupa" + String.valueOf(j));
+            tmpCard.setTitle("tytuł kartęczki");
+            tmpCard.setDescription("# dupa\n *ugabuga* jdjjd");
             cards.add(tmpCard);
         }
 
@@ -48,7 +50,8 @@ public class StartApp extends Application {
         // TODO link calendar to user
 
         //stage.setScene(new MainView().createMainView(new User("Aleksander B", "alkohol"), workspace));
-        stage.setScene(new MainView().createMainView(usr, workspace));
+        //stage.setScene(new MainView().createMainView(usr, workspace));
+        stage.setScene(new CardView().createCardView(cards.get(1)));
         stage.show();
     }
 

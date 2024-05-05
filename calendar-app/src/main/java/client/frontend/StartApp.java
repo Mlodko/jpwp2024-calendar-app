@@ -1,19 +1,7 @@
-package com.example.calendarapp;
+package client.frontend;
 
 import client.backend.models.*;
-import client.frontend.CalendarFXFactory;
-import client.frontend.LoginView;
-import client.frontend.MainView;
-import com.calendarfx.model.CalendarSource;
-import com.calendarfx.view.CalendarView;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.SplitPane;
-import javafx.scene.text.Font;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -22,7 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 
-public class HelloApplication extends Application {
+public class StartApp extends Application {
 
     //private static final Font font = new Font("file:/resources/client.frontend/Roboto-Medium.tff", 22);
 

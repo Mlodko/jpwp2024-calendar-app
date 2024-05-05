@@ -1,5 +1,6 @@
 package client.frontend;
 
+import client.backend.JsonManager;
 import client.backend.models.User;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -209,19 +210,35 @@ public class LoginView {
 
     public Scene chooseWorkspace(User user) {
         Button cancel = new Button("Cancel");
-
         cancel.setOnAction(event -> {
-            // TODO logout the user
+            if (!user.logOut()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
+                alert.showAndWait();
+                return;
+            }
+
+            // TODO logout from server too!
+            JsonManager.removeAllLocalData();
 
             Stage loginStage = new Stage();
             loginStage.setTitle("Login");
-            loginStage.setScene(createLoginScene());
+
+            try {
+                loginStage.setScene(new LoginView().createLoginScene());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't create login window after the logout");
+                alert.showAndWait();
+                cancel.getScene().getWindow().hide();
+                return;
+            }
+
             cancel.getScene().getWindow().hide();
             loginStage.show();
         });
 
         MenuButton choice = new MenuButton("Choose your workspace:");
-        ArrayList<String> workspaceIDs = new ArrayList<>(); // here read all user's workspace ids
+        ArrayList<String> workspaceIDs = new ArrayList<>(); // TODO here read all user's workspace ids
 
         for (String id : workspaceIDs) {
             MenuItem tmp = new MenuItem(id);
@@ -250,9 +267,11 @@ public class LoginView {
 
         VBox vbox = new VBox();
         vbox.setSpacing(5);
+        vbox.setPadding(new Insets(5));
+        vbox.setAlignment(Pos.CENTER);
         vbox.getChildren().addAll(choice, cancel);
 
-        return new Scene(vbox);
+        return new Scene(vbox, 300, 200);
     }
 
     private static boolean isEmail(String email) {

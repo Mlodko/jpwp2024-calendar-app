@@ -62,6 +62,7 @@ public class WorkspaceHandler extends Handler.Abstract {
         if (parameterNames.contains("id") == parameterNames.contains("ids")) {
             //                           ^^^
             //                          This is a XOR you dumbfucks
+            //                          No it's not, you've been deceived and quite possibly bamboozled
             response.setStatus(400); // Bad request
             response.write(true, StandardCharsets.UTF_8.encode("No \"id\" or \"ids\" parameter or provided both at the same time"), callback);
             return;

@@ -57,7 +57,7 @@ public class MainView {
             Label lbl = new Label("big boobs");
             tmp.getChildren().add(lbl);
             splitPane.getItems().set(1, tmp);
-            // handle refresh...
+            // TODO handle refresh...
         });
 
         calView.setOnAction(event -> {
@@ -164,6 +164,7 @@ public class MainView {
         littleBar.setAlignment(Pos.CENTER);
         littleBar.setSpacing(5);
         littleBar.setPadding(new Insets(5,5,5,5));
+
         AnchorPane forText = new AnchorPane();
         Label text = new Label("Your calendars");
         text.setAlignment(Pos.CENTER);
@@ -179,7 +180,7 @@ public class MainView {
 
         HBox.setHgrow(forText, Priority.ALWAYS);
         littleBar.getChildren().addAll(forText, addCalendar);
-        vbox.getChildren().addAll(sep , littleBar);
+        vbox.getChildren().addAll(sep, littleBar);
 
         // maybe with menu buttons?
         /*
@@ -199,7 +200,16 @@ public class MainView {
          */
 
         for (Calendar cal : usrCalendars) {
+            HBox hbox = new HBox();
+            hbox.setSpacing(3);
+            hbox.setPadding(new Insets(3,3,3,3));
+            hbox.setAlignment(Pos.CENTER);
             MenuButton tmp = new MenuButton(cal.getID());
+            Button add = new Button("Add New Board");
+
+            add.setOnAction(event -> {
+                // add new board to the calendar
+            });
 
             for (KanbanBoard board : cal.getKanbanBoards()) {
                 MenuItem tmpItem = new MenuItem(board.getTitle());
@@ -224,7 +234,7 @@ public class MainView {
                             cardVBox.getChildren().add(cardLbl);
                         }
 
-                        mainVBox.getChildren().addAll(nameLbl, cardVBox);
+                        mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
                         listsBox.getChildren().add(mainVBox);
                     }
 
@@ -235,9 +245,11 @@ public class MainView {
                 tmp.getItems().add(tmpItem);
             }
 
-            vbox.getChildren().add(tmp);
+            hbox.getChildren().addAll(tmp, add);
+            vbox.getChildren().add(hbox);
         }
 
         return vbox;
     }
+
 }

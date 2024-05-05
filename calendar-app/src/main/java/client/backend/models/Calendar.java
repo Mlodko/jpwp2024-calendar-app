@@ -100,6 +100,12 @@ public class Calendar implements Savable<Calendar> {
         return this;
     }
 
+    public Calendar addToKanbanBoards(ArrayList<KanbanBoard> boards) {
+        this.kanbanBoards.addAll(boards);
+        this.kanbanIds.addAll(boards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new)));
+        return this;
+    }
+
     public KanbanBoard[] deleteFromKanbanBoards(Predicate<KanbanBoard> filterFunction) {
         KanbanBoard[] removedBoards = this.kanbanBoards.stream().filter(filterFunction).toArray(KanbanBoard[]::new);
         this.kanbanBoards.removeIf(filterFunction);

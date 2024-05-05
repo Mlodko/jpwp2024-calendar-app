@@ -1,7 +1,9 @@
 package server.handlers;
 
+import client.backend.models.Calendar;
 import client.backend.models.KanbanBoard;
 import client.backend.models.User;
+import client.backend.models.Workspace;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import org.eclipse.jetty.http.HttpHeader;
@@ -10,6 +12,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
 import server.ServerJsonManager;
 import server.UserManager;
@@ -18,6 +21,8 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -54,7 +59,7 @@ public class BoardHandler extends Handler.Abstract {
             }
 
             case "POST" -> {
-                synchronizeServer(request, response, callback);
+                handlePostRequest(request, response, callback);
             }
 
             default -> {
@@ -65,37 +70,68 @@ public class BoardHandler extends Handler.Abstract {
         return true;
     }
 
-    private void handleGetRequest(Request request, Response response, Callback callback) throws Exception {
-        /*
-        // Request data should have workspace id and auth header with token
-        Set<String> parameterNames = Request.getParameters(request).getNames();
+    private void handleGetRequest(Request request, Response response, Callback callback) {
+        if(hasBadGetRequestStructure(request)) {
+            response.setStatus(400);
+            response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
+            return;
+        }
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't parse parameters"), callback);
+            return;
+        }
+        String workspaceId = parameters.getValue("workspace-id");
+        String calendarId = parameters.getValue("calendar-id");
+        List<String> boardIds = Arrays.stream(parameters.getValue("board-ids").replaceAll("/", "")
+                .split(",")).toList();
 
+        ObjectManager.refreshWorkspaces();
+        ArrayList<KanbanBoard> requestedBoards = ObjectManager.getWorkspaces().stream()
+                .filter(workspace -> workspace.getId().equals(workspaceId))
+                .map(Workspace::getCalendars)
+                .flatMap(ArrayList::stream)
+                .filter(calendar -> calendar.getID().equals(calendarId))
+                .map(Calendar::getKanbanBoards)
+                .flatMap(ArrayList::stream)
+                .filter(board -> boardIds.contains(board.getId()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-
-        // If no id given or two fields at the same time given
-        if (!(parameterNames.contains("id") && parameterNames.contains("ids"))) {
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("No \"id\" or \"ids\" parameter or provided both at the same time"), callback);
+        if(requestedBoards.isEmpty()) {
+            response.setStatus(404);
+            response.write(true, StandardCharsets.UTF_8.encode("No boards found"), callback);
             return;
         }
 
+        response.setStatus(200);
+        response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(requestedBoards)), callback);
+    }
 
+    private boolean hasBadGetRequestStructure(Request request) {
+        /*
+        GET REQUEST PARAMETER STRUCTURE
+        workspace-id={}
+        calendar-id={}
+        board-ids={},{},{},...
+         */
 
-        ArrayList<String> boardIds = new ArrayList<>();
-        if(parameterNames.contains("id")){
-            boardIds.add(Request.getParameters(request).get("id").getValue());
-        } else {
-            String ids = Request.getParameters(request).get("ids").getValue();
-            boardIds.addAll(List.of(ids.split(",")));
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            return true;
         }
 
+        return !(parameters.getNames().contains("workspace-id")
+                && parameters.getNames().contains("calendar-id")
+                && parameters.getNames().contains("board-ids"));
+    }
 
-        ArrayList<KanbanBoard> boards = ObjectManager.getKanbanBoards().stream()
-                .filter(board -> boardIds.contains(board.getId()))
-                .collect(Collectors.toCollection(ArrayList::new));
-        response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(boards)), callback);
-        */
-        // Parse json
+    private void handlePostRequest(Request request, Response response, Callback callback) throws Exception {
+        // Read json from request and check if it's well-structured
         String requestJson;
         try {
             requestJson = Content.Source.asString(request);
@@ -111,93 +147,53 @@ public class BoardHandler extends Handler.Abstract {
 
         JsonElement rootElement = JsonParser.parseString(requestJson);
 
-        if(!rootElement.isJsonObject() || hasBadGetRequestStructure(rootElement.getAsJsonObject())) {
+        if(!rootElement.isJsonObject() || hasBadPostRequestStructure(rootElement.getAsJsonObject())) {
             response.setStatus(400); // Bad request
             response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
             return;
         }
 
         JsonObject rootObject = rootElement.getAsJsonObject();
-
         String workspaceId = rootObject.get("workspace-id").getAsString();
         String calendarId = rootObject.get("calendar-id").getAsString();
-        ArrayList<String> boardIds = rootObject.get("board-ids").getAsJsonArray().asList().stream()
-                .map(JsonElement::getAsString)
-                .collect(Collectors.toCollection(ArrayList::new));
+        Type boardArrayType = new TypeToken<ArrayList<KanbanBoard>>(){}.getType();
+        ArrayList<KanbanBoard> boardsToAdd = gson.fromJson(rootObject.get("boards").getAsJsonArray(), boardArrayType);
 
-        // Get requested boards
-//        ArrayList<KanbanBoard> = ObjectManager.getWorkspaces().stream()
+        ObjectManager.refreshWorkspaces();
+        Optional<Calendar> calendarToModify =ObjectManager.getWorkspaces().stream()
+                .filter(workspace -> workspace.getId().equals(workspaceId))
+                .map(Workspace::getCalendars)
+                .flatMap(ArrayList::stream)
+                .filter(calendar -> calendar.getID().equals(calendarId))
+                .findFirst();
 
+        if(calendarToModify.isEmpty()) {
+            response.setStatus(404);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find specified calendar"), callback);
+            return;
+        }
+
+        calendarToModify.get().addToKanbanBoards(boardsToAdd);
+        if(ObjectManager.writeWorkspaceFromCache(workspaceId)) {
+            response.setStatus(200);
+            return;
+        }
+
+        response.setStatus(500);
+        response.write(true, StandardCharsets.UTF_8.encode("Couldn't write changes"), callback);
     }
 
-    private boolean hasBadGetRequestStructure(JsonObject obj) {
+    private boolean hasBadPostRequestStructure(JsonObject obj) {
         /*
-        GET REQUEST STRUCTURE
+        POST REQUEST STRUCTURE:
         {
-            "workspace-id": {workspaceId},
-            "calendar-id": {calendarId},
-            "board-ids": []
+        "workspace-id": {},
+        "calendar-id": {},
+        "boards": {serialized ArrayList<KanbanBoard>}
         }
          */
-        return !(obj.has("workspace-id") && obj.has("calendar-id") && obj.has("board-ids")
-            && obj.get("workspace-id").isJsonPrimitive() && obj.get("calendar-id").isJsonPrimitive() && obj.get("board-ids").isJsonArray());
-    }
 
-    private void synchronizeServer(Request request, Response response, Callback callback) throws Exception {
-        /*
-            Try to read data
-            it should have:
-            - an AUTHORIZATION header with auth-token
-            - boards.json
-            - workspace id
-        */
-
-        // Check user authorization
-        if (!(request.getHeaders().contains(HttpHeader.AUTHORIZATION) && Request.getParameters(request).getNames().contains("workspace-id")
-                && Request.getParameters(request).getNames().contains("calendar-id"))) {
-            response.setStatus(401); // Unauthorized, no authorization provided
-            return;
-        }
-
-        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
-
-        if (!UserManager.ifAuthTokenInLoggedInUsers(authToken)) {
-            response.setStatus(401); // Unauthorized
-            return;
-        }
-
-        Optional<User> authorizedUser = UserManager.findUserWithAuthToken(authToken);
-
-        if (authorizedUser.isEmpty()) {
-            response.setStatus(401); // Unauthorized, no such user in token cache
-            return;
-        }
-
-        // Parse board part
-        String requestJson;
-
-        try {
-            requestJson = Content.Source.asString(request);
-            if (requestJson == null) {
-                throw new IOException();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setStatus(400); // Bad request
-            return;
-        }
-
-        Type boardArrayType = new TypeToken<ArrayList<KanbanBoard>>(){}.getType();
-        ArrayList<KanbanBoard> boards = gson.fromJson(requestJson, boardArrayType);
-
-        // Get parameters
-        String workspaceId = Request.getParameters(request).getValue("workspace-id");
-        String calendarId = Request.getParameters(request).getValue("calendar-id");
-
-        try {
-            ServerJsonManager.writeKanbanBoards(boards, workspaceId, calendarId);
-        } catch (IOException e) {
-            response.setStatus(500);
-        }
+        return !(obj.has("workspace-id") && obj.has("calendar-id") && obj.has("boards")
+        && obj.get("workspace-id").isJsonPrimitive() && obj.get("calendar-id").isJsonPrimitive() && obj.get("boards").isJsonArray());
     }
 }

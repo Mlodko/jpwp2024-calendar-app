@@ -195,6 +195,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     }
 
     public ArrayList<Card> getItems() {
+        if(itemsLists == null)
+            itemsLists = new HashMap<>();
         return this.itemsLists.values().stream()
                 .flatMap(ArrayList::stream)
                 .collect(Collectors.toCollection(ArrayList::new));

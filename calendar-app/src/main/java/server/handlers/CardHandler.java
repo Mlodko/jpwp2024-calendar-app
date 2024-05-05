@@ -9,6 +9,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
 import server.ServerJsonManager;
 import server.UserManager;
@@ -17,6 +18,8 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -48,86 +51,96 @@ public class CardHandler extends Handler.Abstract {
     }
 
     private void handleGetRequest(Request request, Response response, Callback callback) {
-        // Parse json
+        if(hasBadGetRequestStructure(request)) {
+            response.setStatus(400);
+            response.write(true, StandardCharsets.UTF_8.encode("Bad parameter structure"), callback);
+            return;
+        }
 
-        String requestJson;
+        Fields parameters;
         try {
-            requestJson = Content.Source.asString(request);
-            if (requestJson == null) {
-                throw new IOException();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("Couldn't read request content"), callback);
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't parse request parameters"), callback);
             return;
         }
 
-        JsonElement rootElement = JsonParser.parseString(requestJson);
-
-        if(!rootElement.isJsonObject() || hasBadGetRequestStructure(rootElement.getAsJsonObject())) {
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
-            return;
-        }
-
-        JsonObject rootObject = rootElement.getAsJsonObject();
-
-        String calendarId = rootObject.get("calendar-id").getAsString();
-        String workspaceId = rootObject.get("workspace-id").getAsString();
-        ArrayList<String> cardIds = rootObject.get("card-ids").getAsJsonArray().asList().stream()
-                .map(JsonElement::getAsString)
-                .collect(Collectors.toCollection(ArrayList::new));
+        String workspaceId = parameters.getValue("workspace-id");
+        String calendarId = parameters.getValue("calendar-id");
+        List<String> cardIds = Arrays.stream(parameters.getValue("card-ids").replaceAll("/", "").split(",")).toList();
 
         ArrayList<Card> requestedCards;
-        switch (rootObject.get("type").getAsString()) {
-            case "orphan-card" -> {
-                requestedCards = ObjectManager.getCalendars().stream()
-                        .map(Calendar::getOrphanCards)
-                        .flatMap(ArrayList::stream)
-                        .filter(card -> cardIds.contains(card.getId()))
-                        .collect(Collectors.toCollection(ArrayList::new));
-            }
-            case "board-card" -> {
-                requestedCards = ObjectManager.getCalendars().stream()
-                        .map(Calendar::getKanbanBoards)
-                        .flatMap(ArrayList::stream)
-                        .map(KanbanBoard::getItems)
-                        .flatMap(ArrayList::stream)
-                        .filter(card -> cardIds.contains(card.getId()))
-                        .collect(Collectors.toCollection(ArrayList::new));
-            }
-            default -> {
-                response.setStatus(400);
-                response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
-                return;
-            }
+        ObjectManager.refreshWorkspaces();
+        if(parameters.getValue("type").equals("board-card")) {
+            requestedCards = ObjectManager.getWorkspaces().stream()
+                    .filter(workspace -> workspace.getId().equals(workspaceId))
+                    .map(Workspace::getCalendars)
+                    .flatMap(ArrayList::stream)
+                    .filter(calendar -> calendar.getID().equals(calendarId))
+                    .map(Calendar::getKanbanBoards)
+                    .flatMap(ArrayList::stream)
+                    .map(KanbanBoard::getItems)
+                    .flatMap(ArrayList::stream)
+                    .filter(card -> cardIds.contains(card.getId()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        } else {
+            requestedCards = ObjectManager.getWorkspaces().stream()
+                    .filter(workspace -> workspace.getId().equals(workspaceId))
+                    .map(Workspace::getCalendars)
+                    .flatMap(ArrayList::stream)
+                    .filter(calendar -> calendar.getID().equals(calendarId))
+                    .map(Calendar::getOrphanCards)
+                    .flatMap(ArrayList::stream)
+                    .filter(card -> cardIds.contains(card.getId()))
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
 
         if(requestedCards.isEmpty()) {
-            response.setStatus(404); // Not found
-            response.write(true, StandardCharsets.UTF_8.encode("Card not found"), callback);
+            response.setStatus(404);
+            response.write(true, StandardCharsets.UTF_8.encode("No cards found"), callback);
             return;
         }
 
-        response.setStatus(200); // OK
+        response.setStatus(200);
         response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(requestedCards)), callback);
     }
 
-    private boolean hasBadGetRequestStructure(JsonObject obj) {
+    private boolean hasBadGetRequestStructure(Request request) {
         /*
-        GET REQUEST STRUCTURE:
-        {
-            "type": "board-card"/"orphan-card",
-            "workspace-id": {workspaceId},
-            "calendar-id": {calendarId},
-            "card-ids" : []
-        }
+        GET REQUEST PARAMETER STRUCTURE:
+
+        type="board-card"
+        workspace-id={workspaceId}
+        calendar-id={calendarId}
+        board-id={boardId}
+        card-ids={id},{id},{id},...
+
+        OR
+
+        type="orphan-card"
+        workspace-id={workspaceId}
+        calendar-id={calendarId}
+        card-ids={id},{id},{id},...
         */
-        return !(obj.has("type") && obj.has("workspace-id")
-                && obj.has("calendar-id") && obj.has("card-ids")
-                && obj.get("type").isJsonPrimitive() && obj.get("workspace-id").isJsonPrimitive()
-                && obj.get("calendar-id").isJsonPrimitive()) && obj.get("card-ids").isJsonArray();
+
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch (Exception e) {
+            return true;
+        }
+
+        if(!(parameters.getNames().contains("type") && parameters.getNames().contains("workspace-id")
+                && parameters.getNames().contains("calendar-id") && parameters.getNames().contains("card-ids"))) {
+            return true;
+        }
+
+        if(!(parameters.get("type").getValue().equals("board-card") || parameters.get("type").getValue().equals("orphan-card"))) {
+            return true;
+        }
+
+        return false;
     }
 
     private void handlePostRequest(Request request, Response response, Callback callback) {

@@ -4,28 +4,46 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import server.handlers.*;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class MainServer {
 
-    // TODO token authentication
-
     static final String IP_ADDR = "127.0.0.1";
-    static final int PORT = 8080;
+    static final int HTTP_PORT = 8080;
+    static final int HTTPS_PORT = 8443;
+    // You shouldn't store you keystore details like this
+    // but since it's just a uni project I will do it anyway
+    static final Path KEYSTORE_PATH = Path.of(Paths.get("").toAbsolutePath() + "/src/main/resources/server/keystore.jks");
+    static final String KEYSTORE_PASSWORD = "cd@%w46cgQay!pZtrbMp$@az&Df3F4QTHuF4$LRaETA2ryo#9&qkE#nG!inUT$o5B$S5P6DT6#FSxtDjj#mcu5YZE4T4Cqr5nNdBi6KR#csut5LtwpBFKh6$6CjGZ@B6";
 
     public MainServer() {
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setName("Server");
 
         Server server = new Server(threadPool);
-        ServerConnector connector = new ServerConnector(server);
-        connector.setPort(PORT);
-        connector.setHost(IP_ADDR);
 
-        server.addConnector(connector);
+        // HTTP
+        ServerConnector httpConnector = new ServerConnector(server);
+        httpConnector.setPort(HTTP_PORT);
+        httpConnector.setHost(IP_ADDR);
+
+        // HTTPS
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+        sslContextFactory.setKeyStorePath(KEYSTORE_PATH.toString());
+        sslContextFactory.setKeyStorePassword(KEYSTORE_PASSWORD);
+
+        ServerConnector httpsConnector = new ServerConnector(server, sslContextFactory);
+        httpsConnector.setPort(HTTPS_PORT);
+        httpsConnector.setHost(IP_ADDR);
+
+        server.addConnector(httpConnector);
+        server.addConnector(httpsConnector);
 
         ContextHandlerCollection contextCollection = new ContextHandlerCollection();
 

@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import org.eclipse.jetty.client.*;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +16,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -25,13 +28,24 @@ import java.util.stream.Collectors;
 public class RequestManager implements AutoCloseable {
 
     private static final String IP_ADDR = "127.0.0.1";
-    private static final int PORT = 8080;
-    private static final String SERVER_URL = "http://" + IP_ADDR + ":" + PORT;
+    private static final int HTTP_PORT = 8080;
+    private static final int HTTPS_PORT = 8443;
+    private static final String HTTPS_SERVER_URL = "https://" + IP_ADDR + ":" + HTTPS_PORT;
+    private static final String HTTP_SERVER_URL = "http://" + IP_ADDR + ":" + HTTP_PORT;
+
+    static final Path KEYSTORE_PATH = Path.of(Paths.get("").toAbsolutePath() + "/src/main/resources/server/keystore.jks");
+    static final String KEYSTORE_PASSWORD = "cd@%w46cgQay!pZtrbMp$@az&Df3F4QTHuF4$LRaETA2ryo#9&qkE#nG!inUT$o5B$S5P6DT6#FSxtDjj#mcu5YZE4T4Cqr5nNdBi6KR#csut5LtwpBFKh6$6CjGZ@B6";
+
     private final HttpClient httpClient;
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     public RequestManager() throws Exception {
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustAll(true);
+        sslContextFactory.setKeyStorePath(KEYSTORE_PATH.toString());
+        sslContextFactory.setKeyStorePassword(KEYSTORE_PASSWORD);
         this.httpClient = new HttpClient();
+        httpClient.setSslContextFactory(sslContextFactory);
         httpClient.setFollowRedirects(false);
         httpClient.start();
     }
@@ -40,7 +54,7 @@ public class RequestManager implements AutoCloseable {
         Optional<User> loggedInUser = Optional.empty();
         InputStreamResponseListener listener = new InputStreamResponseListener();
 
-        httpClient.POST(SERVER_URL + "/login/")
+        httpClient.POST(HTTPS_SERVER_URL + "/login/")
                 .body(new StringRequestContent("application/json", gson.toJson(user)))
                 .send(listener);
 
@@ -77,7 +91,7 @@ public class RequestManager implements AutoCloseable {
     public Optional<User> makeRegisterRequest(User temp) {
         Optional<User> loggedInUser = Optional.empty();
         InputStreamResponseListener listener = new InputStreamResponseListener();
-        httpClient.POST(SERVER_URL + "/register/")
+        httpClient.POST(HTTPS_SERVER_URL + "/register/")
                 .body(new StringRequestContent("application/json", gson.toJson(temp)))
                 .send(listener);
 
@@ -119,9 +133,9 @@ public class RequestManager implements AutoCloseable {
         try {
             if(ids.length > 1) {
                 String longString = String.join(",", ids);
-                content = httpClient.GET(SERVER_URL + "/workspaces?ids=" + longString);
+                content = httpClient.GET(HTTPS_SERVER_URL + "/workspaces?ids=" + longString);
             } else {
-                content = httpClient.GET(SERVER_URL + "/workspaces?ids" + ids[0]);
+                content = httpClient.GET(HTTPS_SERVER_URL + "/workspaces?ids" + ids[0]);
             }
         } catch (Exception e) {
             return Optional.empty();
@@ -145,7 +159,7 @@ public class RequestManager implements AutoCloseable {
         ContentResponse content;
 
         try {
-            content = httpClient.POST(SERVER_URL + "/workspace")
+            content = httpClient.POST(HTTPS_SERVER_URL + "/workspace")
                     .body(new StringRequestContent("application/json", gson.toJson(workspace)))
                     .send();
         } catch (Exception e) {
@@ -158,5 +172,12 @@ public class RequestManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         httpClient.stop();
+    }
+
+    public static void main(String[] args) throws Exception {
+        User user = new User("klaun", "65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5", "test@test.test");
+        try(RequestManager requestManager = new RequestManager()) {
+            System.out.println(requestManager.makeLoginRequest(user).isPresent());
+        }
     }
 }

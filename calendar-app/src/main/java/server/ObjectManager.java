@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ObjectManager {
+public abstract class ObjectManager {
     private static ArrayList<Workspace> workspaces = ServerJsonManager.readALLdata();
 
     public static ArrayList<Workspace> getWorkspaces() {

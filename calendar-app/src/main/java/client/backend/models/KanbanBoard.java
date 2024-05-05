@@ -159,7 +159,9 @@ public class KanbanBoard implements Savable<KanbanBoard> {
                     "\nTry calling addToItemsList()");
         }
         itemsLists.put(columnTitle, items);
-        itemIds.put(columnTitle, items.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new)));
+        itemIds.put(columnTitle, items.stream()
+                .map(Card::getId)
+                .collect(Collectors.toCollection(ArrayList::new)));
         this.lastModifiedTime = new Date();
         return this;
     }

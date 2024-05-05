@@ -10,6 +10,11 @@ abstract public class MarkdownParser {
 
     public static String parseToHtml(String markdown) {
         Node document = parser.parse(markdown);
-        return renderer.render(document).replaceAll("<em>", "<i>").replaceAll("</em>", "</i>");
+        return renderer.render(document);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(parseToHtml("njkwdc  eiowvkn dovn \n" +
+                "cineicjnwcnwi chwe c"));
     }
 }

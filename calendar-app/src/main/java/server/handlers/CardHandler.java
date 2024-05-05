@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import server.ObjectManager;
+import server.ServerJsonManager;
 import server.UserManager;
 
 import java.io.IOException;
@@ -192,6 +193,15 @@ public class CardHandler extends Handler.Abstract {
                 } else {
                     boardToModify.get().addNewItemColumn(columnName, cardsToAdd);
                 }
+
+
+                try {
+                    ServerJsonManager.writeALLdata(workspaceToModify.get());
+                } catch (IOException e) {
+                    response.setStatus(500); // Server error
+                    response.write(true, StandardCharsets.UTF_8.encode("Couldn't write JSON"), callback);
+                    return;
+                }
             }
 
             case "orphan-card" -> {
@@ -208,6 +218,13 @@ public class CardHandler extends Handler.Abstract {
                 }
 
                 calendarToModify.get().addToOrphanCards(cardsToAdd);
+                try {
+                    ServerJsonManager.writeALLdata(workspaceToModify.get());
+                } catch (IOException e) {
+                    response.setStatus(500); // Server error
+                    response.write(true, StandardCharsets.UTF_8.encode("Couldn't write JSON"), callback);
+                    return;
+                }
             }
 
             default -> {

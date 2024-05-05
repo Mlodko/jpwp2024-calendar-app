@@ -2,8 +2,9 @@ package server.handlers;
 
 import client.backend.models.Calendar;
 import client.backend.models.User;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import client.backend.models.Workspace;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
@@ -12,15 +13,15 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
-import server.ServerJsonManager;
 import server.UserManager;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CalendarHandler extends Handler.Abstract {
@@ -30,13 +31,29 @@ public class CalendarHandler extends Handler.Abstract {
     @Override
     public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
+        // Check auth
+        if(!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
+            response.setStatus(401);
+            response.write(true, StandardCharsets.UTF_8.encode("No auth header"), callback);
+            return true;
+        }
+        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
+        Optional<User> requestingUser = UserManager.findUserWithAuthToken(authToken);
+
+        if(requestingUser.isEmpty()) {
+            response.setStatus(401);
+            response.write(true, StandardCharsets.UTF_8.encode("User not found"), callback);
+            return true;
+        }
+
+
         switch(request.getMethod()) {
             case "GET" -> {
-                synchronizeClient(request, response, callback);
+                handleGetRequest(request, response, callback);
             }
 
             case "POST" -> {
-                synchronizeServer(request, response, callback);
+                handlePostRequest(request, response, callback);
             }
 
             default -> {
@@ -47,98 +64,61 @@ public class CalendarHandler extends Handler.Abstract {
         return true;
     }
 
-    private void synchronizeClient(Request request, Response response, Callback callback) throws Exception {
-        // Request data should have workspace id and auth header with token
-        Set<String> parameterNames = Request.getParameters(request).getNames();
-
-        // No auth header
-        if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
-            return;
-        }
-
-        // If no id given or two fields at the same time given
-        if (parameterNames.contains("id") == parameterNames.contains("ids")) {
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("No \"id\" or \"ids\" parameter or provided both at the same time"), callback);
-            return;
-        }
-
-        // Get authToken and load user
-        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
-
-        Optional<User> goodUser = UserManager.findUserWithAuthToken(authToken);
-
-        if (goodUser.isEmpty()) {
-            response.setStatus(401);
-            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
-            return;
-        }
-
-        ArrayList<String> calendarIds = new ArrayList<>();
-        if(parameterNames.contains("id")) {
-            calendarIds.add(Request.getParameters(request).get("id").getValue());
-        } else {
-            String ids = Request.getParameters(request).get("ids").getValue();
-            calendarIds.addAll(List.of(ids.split(",")));
-        }
-
-        ArrayList<Calendar> calendars = ObjectManager.getCalendars().stream()
-                .filter(calendar -> calendarIds.contains(calendar.getID()) &&
-                        calendar.getMemberIds().contains(goodUser.get().getId()))
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(calendars)), callback);
-        response.setStatus(200); // OK
-    }
-
-    private void synchronizeServer(Request request, Response response, Callback callback) {
-        /*  Try to read data
-            it should have:
-            - an AUTHORIZATION header with auth-token
-            - calendar.json
-            - "workspace-id" parameter
-        */
-
-        // Check user authorization
-        if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
-            response.setStatus(401); // Unauthorized, no authorization provided
-            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
-            return;
-        }
-
-        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
-        if (!UserManager.ifAuthTokenInLoggedInUsers(authToken)) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
+    private void handleGetRequest(Request request, Response response, Callback callback) throws Exception {
+        if(hadBadGetRequestStructure(request)) {
+            response.setStatus(400);
+            response.write(true, StandardCharsets.UTF_8.encode("Bad request parameters"), callback);
             return;
         }
 
         Fields parameters;
         try {
             parameters = Request.getParameters(request);
-        } catch (Exception e) {
-            response.setStatus(500); // Server error
-            return;
-        }
-
-        if (!parameters.getNames().contains("workspace-id")) {
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("No workspace-id parameter"), callback);
+        } catch(Exception e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't read parameters"), callback);
             return;
         }
 
         String workspaceId = parameters.getValue("workspace-id");
+        List<String> calendarIds = Arrays.stream(parameters.getValue("calendar-ids").replaceAll("/", "").split(",")).toList();
 
-        Optional<User> authorizedUser = UserManager.findUserWithAuthToken(authToken);
+        ArrayList<Calendar> requestedCalendars = ObjectManager.getWorkspaces().stream()
+                .filter(workspace -> workspace.getId().equals(workspaceId))
+                .map(Workspace::getCalendars)
+                .flatMap(ArrayList::stream)
+                .filter(calendar -> calendarIds.contains(calendar.getID()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        if (authorizedUser.isEmpty()) {
-            response.setStatus(401); // Unauthorized, no such user in token cache
+        if(requestedCalendars.isEmpty()) {
+            response.setStatus(404);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find specified calendars"), callback);
             return;
         }
 
-        // Parse calendar part
+        response.setStatus(200);
+        response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(requestedCalendars)), callback);
+    }
+
+    private boolean hadBadGetRequestStructure(Request request) {
+        /*
+        CALENDAR GET PARAMETER STRUCTURE:
+        workspace-id={}
+        calendar-ids={},{},{},...
+         */
+
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            return true;
+        }
+
+        return !(parameters.getNames().contains("workspace-id") && parameters.getNames().contains("calendar-ids"));
+    }
+
+    private void handlePostRequest(Request request, Response response, Callback callback) {
+        // Read json from request and check if it's well-structured
         String requestJson;
         try {
             requestJson = Content.Source.asString(request);
@@ -148,24 +128,55 @@ public class CalendarHandler extends Handler.Abstract {
         } catch (IOException e) {
             e.printStackTrace();
             response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't read request content"), callback);
             return;
         }
 
-        Calendar calendar = gson.fromJson(requestJson, Calendar.class);
+        JsonElement rootElement = JsonParser.parseString(requestJson);
 
-        if(!calendar.getMemberIds().contains(authorizedUser.get().getId())) {
-            response.setStatus(401); // Unauthorized
+        if(!rootElement.isJsonObject() || hasBadPostRequestStructure(rootElement.getAsJsonObject())) {
+            response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
             return;
         }
 
-        try {
-            ServerJsonManager.writeCalendarData(calendar, workspaceId);
-        } catch(IOException e) {
-            e.printStackTrace();
-            response.setStatus(500); // Server error
+        // Parse json
+        JsonObject rootObject = rootElement.getAsJsonObject();
+        String workspaceId = rootObject.get("workspace-id").getAsString();
+        Type calendarArrayType = new TypeToken<ArrayList<Calendar>>(){}.getType();
+        ArrayList<Calendar> calendarsToAdd = gson.fromJson(rootObject.get("calendars"), calendarArrayType);
+
+        ObjectManager.refreshWorkspaces();
+        Optional<Workspace> workspaceToModify = ObjectManager.getWorkspaces().stream()
+                .filter(workspace -> workspace.getId().equals(workspaceId))
+                .findFirst();
+
+        if(workspaceToModify.isEmpty()) {
+            response.setStatus(404); // Not found
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find specified workspace"), callback);
             return;
         }
 
-        response.setStatus(200); // OK
+        workspaceToModify.get().addToCalendars(calendarsToAdd);
+        if(!ObjectManager.writeWorkspaceFromCache(workspaceId)) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspace"), callback);
+            return;
+        }
+
+        response.setStatus(200);
+    }
+
+    private boolean hasBadPostRequestStructure(JsonObject obj) {
+        /*
+        CALENDAR JSON POST STRUCTURE
+        {
+        "workspace-id": {},
+        "calendars": {serialized ArrayList<Calendar>}
+        }
+         */
+
+        return !(obj.has("workspace-id") && obj.has("calendars")
+        && obj.get("workspace-id").isJsonPrimitive() && obj.get("calendars").isJsonArray());
     }
 }

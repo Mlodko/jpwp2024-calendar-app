@@ -113,6 +113,18 @@ public class Workspace implements Savable<Workspace>{
         return this;
     }
 
+    public Workspace addToCalendars(ArrayList<Calendar> calendars) {
+        if(calendars == null) this.calendars = new ArrayList<>();
+        if(calendarIds == null ) this.calendarIds = new ArrayList<>();
+
+        for(Calendar calendar : calendars) {
+            this.calendars.add(calendar);
+            if (!calendarIds.contains(calendar.getID()))
+                this.calendarIds.add(calendar.getID());
+        }
+        return this;
+    }
+
     public ArrayList<User> getMembers() {
         return members;
     }

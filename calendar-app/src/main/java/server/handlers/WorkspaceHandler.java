@@ -1,26 +1,24 @@
 package server.handlers;
 
-import client.backend.models.Calendar;
 import client.backend.models.User;
 import client.backend.models.Workspace;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
 import server.ServerJsonManager;
 import server.UserManager;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -29,15 +27,29 @@ public class WorkspaceHandler extends Handler.Abstract {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
     @Override
-    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+    public boolean handle(Request request, Response response, Callback callback) {
+
+        // Check auth
+        if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
+            response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
+            return true;
+        }
+
+        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
+
+        Optional<User> goodUser = UserManager.findUserWithAuthToken(authToken);
+
+        if (goodUser.isEmpty()) {
+            response.setStatus(401); // Unauthorized
+            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
+            return true;
+        }
+
         switch (request.getMethod()) {
             // Only sends workspace.json
-            case "GET" -> {
-                synchronizeClientToServer(request, response, callback);
-            }
-            case "POST" -> {
-                synchronizeServerToClient(request, response, callback);
-            }
+            case "GET" -> handleGetRequest(request, response, callback);
+            case "POST" -> handlePostRequest(request, response, callback);
             default -> {
                 response.setStatus(400); // Bad request
                 response.write(true, StandardCharsets.UTF_8.encode("Unsupported HTTP method, use GET or POST"), callback);
@@ -47,107 +59,65 @@ public class WorkspaceHandler extends Handler.Abstract {
         return true;
     }
 
-    private void synchronizeClientToServer(Request request, Response response, Callback callback) throws Exception {
-        // Request data should have workspace id and auth header with token
-        Set<String> parameterNames = Request.getParameters(request).getNames();
-
-        // No auth header
-        if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
+    private void handleGetRequest(Request request, Response response, Callback callback) {
+        if(hasBadGetRequestStructure(request)) {
+            response.setStatus(400);
+            response.write(true, StandardCharsets.UTF_8.encode("Bad request structure"), callback);
             return;
         }
 
-        // If no id given or two fields at the same time given
-        if (parameterNames.contains("id") == parameterNames.contains("ids")) {
-            //                           ^^^
-            //                          This is a XOR you dumbfucks
-            //                          No it's not, you've been deceived and quite possibly bamboozled
-            response.setStatus(400); // Bad request
-            response.write(true, StandardCharsets.UTF_8.encode("No \"id\" or \"ids\" parameter or provided both at the same time"), callback);
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't read parameters"), callback);
             return;
         }
 
-        // Get authToken and load user
-        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
+        List<String> workspaceIds = Arrays.stream(parameters.getValue("workspace-ids").replaceAll("/", "").split(",")).toList();
 
-        Optional<User> goodUser = UserManager.findUserWithAuthToken(authToken);
-
-        if (goodUser.isEmpty()) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
-            return;
-        }
-
-        // Get id/ids
-        // Check if user in workspace(s) specified by id/ids
-        ArrayList<String> workspaceIds = new ArrayList<>();
-
-        if (parameterNames.contains("id")) {
-            workspaceIds.add(Request.getParameters(request).get("id").getValue());
-        } else {
-            String ids = Request.getParameters(request).get("ids").getValue();
-            // Ids in format "id,id,id"
-            workspaceIds.addAll(Arrays.stream(ids.split(",")).toList());
-        }
-
-        ArrayList<Workspace> workspaces = ObjectManager.getWorkspaces().stream()
+        ArrayList<Workspace> requestedWorkspaces = ObjectManager.getWorkspaces().stream()
                 .filter(workspace -> workspaceIds.contains(workspace.getId()))
                 .collect(Collectors.toCollection(ArrayList::new));
-        if(workspaces.isEmpty()) {
-            response.setStatus(404); // Not found
-            response.write(true, StandardCharsets.UTF_8.encode("Workspace not found"), callback);
-            return;
-        }
-        if(workspaces.stream().anyMatch(workspace -> workspace.getMemberIds().contains(goodUser.get().getId()))) {
-            response.setStatus(403); // Forbidden
-            response.write(true, StandardCharsets.UTF_8.encode("Not authorized to access resource"), callback);
+
+        if(requestedWorkspaces.isEmpty()) {
+            response.setStatus(404);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find workspaces"), callback);
             return;
         }
 
-        // If authorized send
-        String responseJson = gson.toJson(workspaces);
-        response.setStatus(200); // OK
-        response.write(true, StandardCharsets.UTF_8.encode(responseJson), callback);
+        response.setStatus(200);
+        response.write(true, StandardCharsets.UTF_8.encode(gson.toJson(requestedWorkspaces)), callback);
     }
 
-    private void synchronizeServerToClient(Request request, Response response, Callback callback) {
-        /*  Try to read data
-            it should have:
-            - an AUTHORIZATION header with auth-token
-            - workspace.json
-        */
+    private boolean hasBadGetRequestStructure(Request request) {
+        /*
+        WORKSPACE GET REQUEST STRUCTURE
+        workspace-ids={},{},{}
+         */
 
-        // Check user authorization
-        if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
-            response.setStatus(401); // Unauthorized, no authorization provided
-            response.write(true, StandardCharsets.UTF_8.encode("No authorization header"), callback);
-
-            return;
+        Fields parameters;
+        try {
+            parameters = Request.getParameters(request);
+        } catch(Exception e) {
+            return true;
         }
 
-        String authToken = request.getHeaders().get(HttpHeader.AUTHORIZATION);
-        if (!UserManager.ifAuthTokenInLoggedInUsers(authToken)) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
+        return !(parameters.getNames().contains("workspace-ids"));
+    }
 
-            return;
-        }
+    private void handlePostRequest(Request request, Response response, Callback callback) {
 
-        Optional<User> authorizedUser = UserManager.findUserWithAuthToken(authToken);
-
-        if (authorizedUser.isEmpty()) {
-            response.setStatus(401); // Unauthorized
-            response.write(true, StandardCharsets.UTF_8.encode("Bad auth data"), callback);
-            return;
-        }
 
         // Parse workspace part
         String requestJson;
         try {
             requestJson = Content.Source.asString(request);
             if (requestJson == null) {
-                throw new IOException();
+                response.setStatus(500); // Bad request
+                response.write(true, StandardCharsets.UTF_8.encode("Couldn't read request content"), callback);
+                return;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -156,23 +126,43 @@ public class WorkspaceHandler extends Handler.Abstract {
             return;
         }
 
-        Workspace workspace = gson.fromJson(requestJson, Workspace.class);
+        JsonElement requestElement = JsonParser.parseString(requestJson);
 
-        if (!workspace.getMemberIds().contains(authorizedUser.get().getId())) {
-            response.setStatus(403); // Forbidden, user not in workspace
-            response.write(true, StandardCharsets.UTF_8.encode("Not authorized to access resource"), callback);
+        if(!requestElement.isJsonObject() && hasBadPostRequestStructure(requestElement.getAsJsonObject())) {
+            response.setStatus(400); // Bad request
+            response.write(true, StandardCharsets.UTF_8.encode("Bad request content"), callback);
             return;
+        }
+        JsonObject jsonObject = requestElement.getAsJsonObject();
+        Type workspaceArrayType = new TypeToken<ArrayList<Workspace>>(){}.getType();
+        ArrayList<Workspace> workspacesToAdd = gson.fromJson(jsonObject.get("workspaces"), workspaceArrayType);
+
+        if(workspacesToAdd.isEmpty()) {
+            response.setStatus(400);
+            response.write(true, StandardCharsets.UTF_8.encode("Empty workspaces field"), callback);
         }
 
         try {
-            ServerJsonManager.writeWorkspaceData(workspace);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setStatus(500); // Server error
-            response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspace data"), callback);
+            ObjectManager.addToWorkspaces(workspacesToAdd);
+        } catch(IOException e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspaces"), callback);
             return;
         }
 
-        response.setStatus(200); // OK
+        response.setStatus(200);
+    }
+
+    private boolean hasBadPostRequestStructure(JsonObject obj) {
+        /*
+        WORKSPACE POST REQUEST STRUCTURE
+        {
+            "workspaces": [
+            {},{},{}
+            ]
+        }
+         */
+
+        return !(obj.has("workspaces") && obj.get("workspaces").isJsonArray());
     }
 }

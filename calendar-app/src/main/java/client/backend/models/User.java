@@ -181,7 +181,8 @@ public class User implements Savable<User>{
         return gson.toJson(this);
     }
 
+    /*
     public static void main(String[] args) throws Exception {
         Optional<User> user = User.register("1", "2", "3");
-    }
+    }*/
 }

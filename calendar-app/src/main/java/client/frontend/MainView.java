@@ -196,8 +196,6 @@ public class MainView {
 
                 tmpItem.setOnAction(event -> {
                     mainSplitPane.getItems().set(1, this.createKanbanView(board));
-
-
                 });
 
                 tmp.getItems().add(tmpItem);
@@ -222,6 +220,7 @@ public class MainView {
 
         for (Map.Entry<String, ArrayList<Card>> entry : board.getItemsLists().entrySet()) {
             VBox mainVBox = new VBox();
+            mainVBox.setMaxWidth(250);
             VBox.setVgrow(mainVBox, Priority.ALWAYS);
             mainVBox.setAlignment(Pos.TOP_CENTER);
             mainVBox.setSpacing(8);
@@ -230,10 +229,11 @@ public class MainView {
             VBox cardVBox = new VBox();
             cardVBox.setSpacing(5);
 
-            // TODO redo cards in kanban
             for (Card card : entry.getValue()) {
                 cardVBox.getChildren().add(createCard(card));
             }
+
+            cardVBox.getChildren().add(this.createLastCard());
 
             Separator sep = new Separator(Orientation.HORIZONTAL);
             mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
@@ -270,7 +270,7 @@ public class MainView {
         cardName.setAlignment(Pos.CENTER);
         forCardName.getChildren().add(cardName);
 
-        Label startDate = new Label("tu bedzie starttime");
+        Label startDate = new Label(card.getStartTime().toString());
         startDate.setPadding(new Insets(3,3,3,3));
         //startDate.setStyle("-fx-background-color: #bebebe;");
         startDate.setAlignment(Pos.CENTER);
@@ -278,7 +278,7 @@ public class MainView {
         Separator vSep = new Separator(Orientation.VERTICAL);
         Separator hSep = new Separator(Orientation.HORIZONTAL);
 
-        Label endDate = new Label("tu bedzie endtime");
+        Label endDate = new Label(card.getEndTime().toString());
         endDate.setPadding(new Insets(3,3,3,3));
         //endDate.setStyle("-fx-background-color: #bebebe;");
         endDate.setAlignment(Pos.CENTER);
@@ -290,6 +290,39 @@ public class MainView {
         stack.setOnDragDetected(event -> {
             System.out.println("Drag detected on card " + card.getId());
             //Dragboard dragboard = stack.startDragAndDrop(TransferMode.MOVE);
+        });
+
+        stack.setOnMouseClicked(event -> {
+            Stage cardStage = new Stage();
+            cardStage.setTitle(card.getTitle());
+
+            try {
+                cardStage.setScene(new CardView().createCardView(card));
+            } catch (Exception e) {
+                System.out.println("debiluuuuuu");
+                e.printStackTrace();
+                return;
+            }
+
+            cardStage.show();
+        });
+
+        return stack;
+    }
+
+    // how to get the fucking list index here?
+    private StackPane createLastCard(/* StackPane mainStack */) {
+        StackPane stack = new StackPane();
+        stack.setPadding(new Insets(3,3,3,3));
+        stack.setAlignment(Pos.CENTER);
+        stack.setStyle("-fx-background-color: #bebebe;");
+
+        Label plus = new Label("+");
+        stack.getChildren().add(plus);
+
+        stack.setOnMouseClicked(event -> {
+            System.out.println("added new card UwU");
+            // TODO handle adding new card...
         });
 
         return stack;

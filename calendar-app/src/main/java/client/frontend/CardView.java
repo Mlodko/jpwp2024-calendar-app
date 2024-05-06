@@ -74,7 +74,7 @@ public class CardView {
         mainStack.setPadding(new Insets(3,3,3,3));
         mainStack.getChildren().add(mainVBox);
 
-        return new Scene(mainStack, 1280, 720);
+        return new Scene(mainStack, 900, 520);
     }
 
     private StackPane setupReadView(Card card) {

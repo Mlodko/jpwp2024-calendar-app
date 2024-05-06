@@ -764,8 +764,10 @@ public class RequestManager implements AutoCloseable {
             - GET [x]
             - POST [x]
         - orphan card
-            - GET [?]
-            - POST [?]
+            - GET [x]
+            - POST [x]
+
+         IT IS DONE. BILLIONS SHALL PERISH FROM ITS GLOW.
          */
 
         User user = new User("klaun", "65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5", "test@test.test");
@@ -846,6 +848,7 @@ public class RequestManager implements AutoCloseable {
             ArrayList<Card> orphans = new ArrayList<>();
             orphans.add(orphan);
             System.out.println("POST orphan card: " + requestManager.postOrphanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", orphans));
+            System.out.println("GET orphan card: " + requestManager.getOrphanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", "72d8042f-71ac-471e-b13f-c04e55fceba1").isPresent());
             System.out.println("Logout: " + requestManager.makeLogoutRequest(loggedInUser.get()));
         }
     }

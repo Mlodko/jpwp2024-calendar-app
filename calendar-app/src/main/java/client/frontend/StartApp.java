@@ -21,32 +21,40 @@ public class StartApp extends Application {
         //stage.setScene(new LoginView().createLoginScene());
 
         User usr = new User("bob", "bobowski");
-
         Workspace workspace = new Workspace("sjjs", "dupa");
-        Calendar cal = new Calendar("id2137");
-        HashMap<String, ArrayList<Card>> items = new HashMap<>();
-        ArrayList<Card> cards = new ArrayList<>();
 
-        ArrayList<KanbanBoard> boards = new ArrayList<>();
+        Calendar cal1 = new Calendar("jeden");
+        Calendar cal2 = new Calendar("dwa");
 
-        for (int j = 3; j < 8; j++) {
-            Card tmpCard = new Card("dupa" + String.valueOf(j));
-            tmpCard.setTitle("tytuł kartęczki");
-            tmpCard.setDescription("# dupa\n *ugabuga* jdjjd");
-            cards.add(tmpCard);
-        }
+        KanbanBoard board1 = new KanbanBoard("board jeden").addNewItemColumn("cyce").addNewItemColumn("dupa");
+        KanbanBoard board2 = new KanbanBoard("board dwa").addNewItemColumn("sranie");
+        board1.setTitle("guwno");
+        
+        ArrayList<KanbanBoard> boardlist = new ArrayList<>();
 
-        items.put("key1337", cards);
+        ArrayList<Card> cards1 = new ArrayList<>();
+        ArrayList<Card> cards2 = new ArrayList<>();
 
-        for (int i = 0; i < 3; i++) {
-            KanbanBoard tmpBoard = new KanbanBoard(
-                    String.valueOf(i), "nazwa" + String.valueOf(i), new Date(), new Date(), cal, new Date(), new Date(), items
+        for (int i = 0; i < 11; i++) {
+            cards1.add(new Card(
+                    "title" + String.valueOf(i), "desc" + String.valueOf(i+33), new Date(), new Date())
             );
-            boards.add(tmpBoard);
+
+            cards2.add(cards1.get(i));
+            cards2.add(cards1.get(i));
         }
 
-        cal.setKanbanBoards(boards);
-        workspace.addToCalendars(cal);
+        board1.addToItemsList("cyce", cards1);
+        board1.addToItemsList("dupa", cards2);
+        board2.addToItemsList("sranie", cards2);
+        board2.addToItemsList("sranie", cards1);
+
+        boardlist.add(board1);
+        boardlist.add(board2);
+
+        cal1.setKanbanBoards(boardlist);
+        workspace.addToCalendars(cal2);
+        workspace.addToCalendars(cal1);
 
         // TODO link workspace to user
 

@@ -12,17 +12,17 @@ import java.util.stream.Collectors;
 
 
 public class KanbanBoard implements Savable<KanbanBoard> {
-    @Expose String id;
-    @Expose String title; // Not md! >:(
-    @Expose Date createTime;
-    @Expose Date lastModifiedTime;
-    @Expose String calendarId;
+    @Expose String id = new String();
+    @Expose String title = new String();; // Not md! >:(
+    @Expose Date createTime = new Date();
+    @Expose Date lastModifiedTime = new Date();
+    @Expose String calendarId = new String();;
 
-    @Expose HashMap<String, ArrayList<String>> itemIds;
-    @Expose Date startTime;
-    @Expose Date endTime;
+    @Expose HashMap<String, ArrayList<String>> itemIds = new HashMap<>();
+    @Expose Date startTime = new Date();
+    @Expose Date endTime = new Date();
     Calendar calendar;
-    HashMap<String, ArrayList<Card>> itemsLists;
+    HashMap<String, ArrayList<Card>> itemsLists = new HashMap<>();
     // This is a structure that contains all "columns"/sub-lists of a kanban board
     // Title -> ArrayList<Item>
 
@@ -146,6 +146,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     }
 
     public KanbanBoard addNewItemColumn(String columnTitle) throws IllegalArgumentException{
+        if(itemsLists == null) itemsLists = new HashMap<>();
+        if(itemIds == null) itemIds = new HashMap<>();
         if(itemsLists.containsKey(columnTitle)) {
             throw new IllegalArgumentException("The item list with title " + columnTitle + " already exists." +
                     "\nTry calling addToItemsList()");
@@ -157,6 +159,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     }
 
     public KanbanBoard addNewItemColumn(String columnTitle, ArrayList<Card> items) {
+        if(itemsLists == null) itemsLists = new HashMap<>();
+        if(itemIds == null) itemIds = new HashMap<>();
         if (itemsLists.containsKey(columnTitle)) {
             throw new IllegalArgumentException("The item list with title " + columnTitle + " already exists." +
                     "\nTry calling addToItemsList()");

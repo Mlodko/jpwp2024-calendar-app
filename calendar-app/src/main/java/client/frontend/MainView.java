@@ -12,8 +12,12 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.w3c.dom.events.MouseEvent;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,11 +30,9 @@ public class MainView {
         SplitPane splitPane = new SplitPane();
         StackPane leftRibbon = this.setupLeftPane(loggedInUser, selectedWorkspace, splitPane);
 
-        //CalendarView calendarView = this.createCalendarView(selectedWorkspace);
+        CalendarView calendarView = this.createCalendarView(selectedWorkspace);
 
-        StackPane kanbanView = this.createKanbanView(selectedWorkspace.getCalendars().get(0).getKanbanBoards().get(0));
-
-        splitPane.getItems().addAll(leftRibbon, /*calendarView*/ kanbanView);
+        splitPane.getItems().addAll(leftRibbon, calendarView);
         splitPane.setDividerPosition(0, 0.22);
 
         return new Scene(splitPane, 1280, 720);
@@ -194,6 +196,8 @@ public class MainView {
 
                 tmpItem.setOnAction(event -> {
                     mainSplitPane.getItems().set(1, this.createKanbanView(board));
+
+
                 });
 
                 tmp.getItems().add(tmpItem);
@@ -206,34 +210,89 @@ public class MainView {
         return vbox;
     }
 
-    private StackPane createKanbanView(KanbanBoard board) {
+    private ScrollPane createKanbanView(KanbanBoard board) {
+        ScrollPane scrollKanbanView = new ScrollPane();
+        scrollKanbanView.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
         StackPane kanbanView = new StackPane();
         HBox listsBox = new HBox();
-        Separator sep = new Separator(Orientation.HORIZONTAL);
-        listsBox.setSpacing(5);
+        listsBox.setSpacing(8);
         listsBox.setPadding(new Insets(5, 5, 5, 5));
+        listsBox.setAlignment(Pos.TOP_LEFT);
 
         for (Map.Entry<String, ArrayList<Card>> entry : board.getItemsLists().entrySet()) {
             VBox mainVBox = new VBox();
-            mainVBox.setAlignment(Pos.CENTER);
-            mainVBox.setSpacing(5);
+            VBox.setVgrow(mainVBox, Priority.ALWAYS);
+            mainVBox.setAlignment(Pos.TOP_CENTER);
+            mainVBox.setSpacing(8);
             Label nameLbl = new Label(entry.getKey());
+            nameLbl.setPadding(new Insets(5,5,5,5));
             VBox cardVBox = new VBox();
-            cardVBox.setSpacing(3);
+            cardVBox.setSpacing(5);
 
             // TODO redo cards in kanban
             for (Card card : entry.getValue()) {
-                Label cardLbl = new Label(card.getTitle());
-                cardLbl.setAlignment(Pos.CENTER);
-                cardVBox.getChildren().add(cardLbl);
+                cardVBox.getChildren().add(createCard(card));
             }
 
+            Separator sep = new Separator(Orientation.HORIZONTAL);
             mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
             listsBox.getChildren().add(mainVBox);
         }
 
+        kanbanView.setPadding(new Insets(5,5,5,5));
         kanbanView.getChildren().add(listsBox);
-        return kanbanView;
+        scrollKanbanView.setContent(kanbanView);
+        return scrollKanbanView;
+    }
+
+    private StackPane createCard(Card card) {
+        StackPane stack = new StackPane();
+        stack.setPadding(new Insets(3,3,3,3));
+        stack.setAlignment(Pos.CENTER);
+        stack.setStyle("-fx-background-color: #bebebe;");
+
+        VBox vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER_LEFT);
+        vbox.setPadding(new Insets(3,3,3,3));
+        vbox.setSpacing(3);
+
+        HBox hbox = new HBox();
+        hbox.setAlignment(Pos.CENTER);
+        hbox.setPadding(new Insets(3,3,3,3));
+        hbox.setSpacing(3);
+
+        StackPane forCardName = new StackPane();
+        forCardName.setPadding(new Insets(3,3,3,3));
+        Label cardName = new Label(card.getTitle());
+        cardName.setPadding(new Insets(3,3,3,3));
+        //cardName.setStyle("-fx-background-color: #bebebe;");
+        cardName.setAlignment(Pos.CENTER);
+        forCardName.getChildren().add(cardName);
+
+        Label startDate = new Label("tu bedzie starttime");
+        startDate.setPadding(new Insets(3,3,3,3));
+        //startDate.setStyle("-fx-background-color: #bebebe;");
+        startDate.setAlignment(Pos.CENTER);
+
+        Separator vSep = new Separator(Orientation.VERTICAL);
+        Separator hSep = new Separator(Orientation.HORIZONTAL);
+
+        Label endDate = new Label("tu bedzie endtime");
+        endDate.setPadding(new Insets(3,3,3,3));
+        //endDate.setStyle("-fx-background-color: #bebebe;");
+        endDate.setAlignment(Pos.CENTER);
+
+        hbox.getChildren().addAll(startDate, vSep, endDate);
+        vbox.getChildren().addAll(forCardName, hSep, hbox);
+        stack.getChildren().add(vbox);
+
+        stack.setOnDragDetected(event -> {
+            System.out.println("Drag detected on card " + card.getId());
+            //Dragboard dragboard = stack.startDragAndDrop(TransferMode.MOVE);
+        });
+
+        return stack;
     }
 
 }

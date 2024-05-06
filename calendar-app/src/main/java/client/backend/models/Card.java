@@ -25,23 +25,23 @@ public class Card implements Savable<Card> {
     // fields with getters and setters:
 
     @Expose
-    private String id;
+    private String id = new String();
     @Expose
-    private String title; // not yet MD.....
+    private String title = new String(); // not yet MD.....
     @Expose
-    private String description; // Markdown!! :-)))))))))))
+    private String description = new String(); // Markdown!! :-)))))))))))
     @Expose
-    private Date startTime;
+    private Date startTime = new Date();
     @Expose
-    private Date endTime;
+    private Date endTime = new Date();
     @Expose
-    private Date creationTime;
+    private Date creationTime = new Date();
     @Expose
-    private Date lastModifyTime;
+    private Date lastModifyTime = new Date();
     @Expose
-    private ArrayList<String> assignedUserIds;
+    private ArrayList<String> assignedUserIds = new ArrayList<>();
 
-    private ArrayList<User> assignedUsers;
+    private ArrayList<User> assignedUsers = new ArrayList<>();
 
     public Card(String id) {
         this.id = id;

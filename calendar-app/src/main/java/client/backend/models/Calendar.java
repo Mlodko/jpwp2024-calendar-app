@@ -10,19 +10,19 @@ import java.util.stream.Collectors;
 
 public class Calendar implements Savable<Calendar> {
 
-    @Expose private String id;
-    private ArrayList<KanbanBoard> kanbanBoards;
-    @Expose private ArrayList<String> kanbanIds;
-    private ArrayList<Card> orphanCards;
-    @Expose private ArrayList<String> orphanIds;
+    @Expose private String id = new String();
+    private ArrayList<KanbanBoard> kanbanBoards = new ArrayList<>();
+    @Expose private ArrayList<String> kanbanIds = new ArrayList<>();
+    private ArrayList<Card> orphanCards = new ArrayList<>();
+    @Expose private ArrayList<String> orphanIds = new ArrayList<>();
 
-    private ArrayList<User> members;
+    private ArrayList<User> members = new ArrayList<>();
 
-    @Expose private ArrayList<String> memberIds;
+    @Expose private ArrayList<String> memberIds = new ArrayList<>();
 
     private Workspace workspace;
 
-    @Expose private String workspaceId;
+    @Expose private String workspaceId = new String();
 
     private final static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
@@ -71,10 +71,16 @@ public class Calendar implements Savable<Calendar> {
     }
 
     public ArrayList<KanbanBoard> getKanbanBoards() {
+        if(kanbanBoards == null) kanbanBoards = new ArrayList<>();
         return this.kanbanBoards;
     }
 
-    public List<String> getKanbanIds() { return this.kanbanIds; }
+    public List<String> getKanbanIds() {
+        if (this.kanbanIds == null)
+            this.kanbanIds = new ArrayList<>();
+
+        return this.kanbanIds;
+    }
 
     public Calendar setKanbanBoards(ArrayList<KanbanBoard> newKanbanBoards) {
         if (newKanbanBoards == null) {
@@ -116,6 +122,8 @@ public class Calendar implements Savable<Calendar> {
     }
 
     public ArrayList<Card> getOrphanCards() {
+        if (this.orphanCards == null)
+            this.orphanCards = new ArrayList<>();
         return this.orphanCards;
     }
 
@@ -145,6 +153,8 @@ public class Calendar implements Savable<Calendar> {
     public Calendar addToOrphanCards(ArrayList<Card> newOrphans) {
         if(this.orphanCards == null)
             this.orphanCards = new ArrayList<>();
+        if(this.orphanIds == null)
+            this.orphanIds = new ArrayList<>();
         this.orphanCards.addAll(newOrphans);
         for (Card card : newOrphans) {
             if(!orphanIds.contains(card.getId()))

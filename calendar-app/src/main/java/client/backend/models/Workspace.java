@@ -11,18 +11,18 @@ import java.util.stream.Collectors;
 
 public class Workspace implements Savable<Workspace>{
     @Expose
-    private String id;
+    private String id = new String();
     @Expose
-    private String name;
+    private String name = new String();
     @Expose
-    private String description;
+    private String description = new String();
     @Expose
-    private ArrayList<String> calendarIds;
+    private ArrayList<String> calendarIds = new ArrayList<>();
     @Expose
-    private ArrayList<String> memberIds;
+    private ArrayList<String> memberIds = new ArrayList<>();
 
-    private ArrayList<Calendar> calendars;
-    private ArrayList<User> members;
+    private ArrayList<Calendar> calendars = new ArrayList<>();
+    private ArrayList<User> members = new ArrayList<>();
 
     public static final Workspace DEFAULT = new Workspace("DEFAULT", "DEFAULT");
 

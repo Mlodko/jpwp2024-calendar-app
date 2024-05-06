@@ -95,15 +95,13 @@ public class CardHandler extends Handler.Abstract {
                 requestedCards = new ArrayList<>();
             }
         } else {
-            requestedCards = ObjectManager.getWorkspaces().stream()
-                    .filter(workspace -> workspace.getId().equals(workspaceId))
-                    .map(Workspace::getCalendars)
-                    .flatMap(ArrayList::stream)
-                    .filter(calendar -> calendar.getID().equals(calendarId))
-                    .map(Calendar::getOrphanCards)
-                    .flatMap(ArrayList::stream)
-                    .filter(card -> cardIds.contains(card.getId()))
-                    .collect(Collectors.toCollection(ArrayList::new));
+            try {
+                requestedCards = ServerJsonManager.readOrphanCards(calendarId, workspaceId).stream()
+                        .filter(card -> cardIds.contains(card.getId()))
+                        .collect(Collectors.toCollection(ArrayList::new));
+            } catch(Exception e) {
+                requestedCards = new ArrayList<>();
+            }
         }
 
         if(requestedCards.isEmpty()) {

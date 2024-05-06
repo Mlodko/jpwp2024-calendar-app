@@ -18,11 +18,11 @@ import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 
 public class User implements Savable<User>{
 
-    @Expose String id;
-    @Expose String username;
-    @Expose String passwordHash;
-    @Expose String email;
-    @Expose ArrayList<String> assignedWorkspaceIds;
+    @Expose String id = new String();
+    @Expose String username = new String();
+    @Expose String passwordHash = new String();
+    @Expose String email = new String();
+    @Expose ArrayList<String> assignedWorkspaceIds = new ArrayList<>();
     String password;
     String authToken; // Token that the server sends on login, used to authenticate the user from now on
 

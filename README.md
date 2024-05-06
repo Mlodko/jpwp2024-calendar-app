@@ -3,7 +3,7 @@
 ### Cele:
 - omówienie zagadnień związanych z organizacją pracy, na przykładach takich narzędzi jak Google Calendar, Trello oraz Obsidian;
 - przedstawienie zalet i wad konceptów związanych z tzw. *plain textem*, na przykładach formatów *Markdown* oraz *JSON*;
-- wprowadzenie zagadnień związanych z synchronizacją z napisanym, prostym serwerem HTTP i narzędziami zewnętrznymi, takimi jak Google Calendar oraz Github.
+- wprowadzenie zagadnień związanych z synchronizacją z napisanym, prostym serwerem HTTP.
 
 ### Użyliśmy:
 - **Javy (Maven build)** z zewnętrznymi modułami: *JavaFX*, *CalendarFX*, *ControlsFX*, *CommonMark*, *Eclipse Jetty*, *GSON*.
@@ -25,30 +25,34 @@ ___
 
 ### Zadanie 1.  
 
-Napisz (zaimplementowany w dowolnym, prostym okienku) parser trzech znaczników Markdowna: \**dla kursywy*\*, \*\***dla pogrubienia**\*\* i ***\*\*\*pogrubionej kursywy***\*\*\* - <u>nie musisz uwzględniać sytuacji z zagnieżdżonymi znacznikami</u>. 
+Zaimplementuj proste okienko, które będzie w poprawny sposób renderować tekst w *Markdownie* i *HTMLu* - dla Javy rekomendujemy użyć omówionych na prezentacji elementów *JavaFX*, *CommonMarka* oraz *WebView*.
 
->Przekaż na UPEL screenshot z owego okienka z dowolnym tekstem, który w dowolny sposób sformatujesz tymi trzema znacznikami.
+>Przekaż na UPEL screenshot z owego okienka z dowolnym tekstem, który w dowolny sposób sformatujesz co najmniej trzema znacznikami.
 
 ### Zadanie 2.
 
-Stwórz klasę *User*, która zapewni prostą funkcjonalność dla użytkownika. Uwzględnij:
+Stwórz klasę *User*, która zapewni prostą funkcjonalność dla klasy użytkownika. Uwzględnij:
 - **pola**: id, name, password; 
 - **metody**: konstruktory (wystarczy domyślny), gettery i settery dla pól;
-- dodaj do klasy **funkcjonalność serializacji** do pliku *.json* i deserializacji z niego (dla Javy proponujemy omówiony moduł *GSON*).
+- **funkcjonalność serializacji** do pliku *.json* i deserializacji z niego (dla Javy proponujemy omówiony moduł *GSON*).
+
+Nie musisz implementować więcej, ani implementować hashowania hasła, choć zachęcamy do eksperymentów.
 
 >Na UPEL wyślij screenshot zaimplementowanej klasy lub wklej jej kod.
 
 ### Zadanie 3. 
 
-Stwórz prosty serwer *HTTP*, którego zadaniem jest jedynie nasłuchiwanie na porcie **8080** na *localhost* i odbieranie z niego żądań (dla Javy proponujemy omówiony moduł *Eclipse Jetty*). Wykorzystaj go do stworzenia obiektu klasy *User* z zadania 2., gdzie pola to:
+Stwórz prosty serwer *HTTP*, którego zadaniem jest jedynie nasłuchiwanie na porcie o wybranym numerze na *localhost* i odbieranie z niego żądań POST (dla Javy proponujemy omówiony moduł *Eclipse Jetty*). Wykorzystaj go do stworzenia obiektu klasy *User* z zadania 2., gdzie pola to:
 - id = twój indeks, 
 - name = twoje imię, 
 - password = dowolny ciąg znaków. 
 
->Na UPEL przekaż treść żądania HTTP (screenshot lub wklejony tekst) odebraną przez aplikację serwera przy tworzeniu klasy *User*.
+Wystarczy, że ustawisz na nim prosty handler, który przy odebraniu poprawnego żądania odpowie kodem 200, a na wszystko inne w domyślny sposób.
+
+>Na UPEL przekaż screenshot wysłanego żądania HTTP widocznego z przeglądarki, gdzie będzie także widać odpowiedź serwera.
 
 ### Zadanie 4.
 
-Korzystając z napisanych już klas prześlij przez przeglądarkę (*https://localhost:8080/\[treść]*) do serwera *HTTP* dane nowego użytkownika (**które zostaną podane na zajęciach**) - serwer niech automatycznie zserializuje nowopowstały obiekt do pliku *.json*, po czym wyświetli odpowiednio sformatowane, odebrane żądanie w okienku z zadania 1.
+Korzystając z napisanych już klas prześlij przez inspektora przeglądarki do serwera z zadania 3. dane nowego użytkownika (**które zostaną podane na zajęciach**) - serwer niech automatycznie zserializuje nowopowstały obiekt do pliku *.json*, po czym wyświetl odpowiednio sformatowane, odebrane dane w okienku z zadania 1.
 
->Na UPEL prześlij screenshot sformatowanego (w okienku z zadania 1.), odebranego żądania *HTTP* z odpowiednim tekstem.
+>Na UPEL prześlij screenshot okienka z odebranymi i odpowiednio sformatowanymi danymi użytkownika.

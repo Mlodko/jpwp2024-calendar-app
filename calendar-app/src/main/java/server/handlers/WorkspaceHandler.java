@@ -77,9 +77,16 @@ public class WorkspaceHandler extends Handler.Abstract {
 
         List<String> workspaceIds = Arrays.stream(parameters.getValue("workspace-ids").replaceAll("/", "").split(",")).toList();
 
-        ArrayList<Workspace> requestedWorkspaces = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspaceIds.contains(workspace.getId()))
-                .collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<Workspace> requestedWorkspaces = new ArrayList<>();
+        for(String workspaceId : workspaceIds) {
+            try {
+                requestedWorkspaces.add(ServerJsonManager.readWorkspaceData(workspaceId));
+            } catch(IOException e) {
+                response.setStatus(404);
+                response.write(true, StandardCharsets.UTF_8.encode("Couldn't find workspaces"), callback);
+                return;
+            }
+        }
 
         if(requestedWorkspaces.isEmpty()) {
             response.setStatus(404);

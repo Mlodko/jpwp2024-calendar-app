@@ -140,7 +140,7 @@ public class ServerJsonManager {
         return gson.fromJson(json, type);
     }
 
-    private static Workspace readWorkspaceData(String workspaceId) throws IOException {
+    public static Workspace readWorkspaceData(String workspaceId) throws IOException {
         File file = new File(rootDir + "/workspace-" + workspaceId + "/workspace.json");
 
         if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {

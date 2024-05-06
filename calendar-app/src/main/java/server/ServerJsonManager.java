@@ -158,7 +158,7 @@ public class ServerJsonManager {
     }
 
 
-    private static ArrayList<KanbanBoard> readKanbanBoardsData(String calendarId, String workspaceId) throws IOException {
+    public static ArrayList<KanbanBoard> readKanbanBoardsData(String calendarId, String workspaceId) throws IOException {
 
         File boardsFile = new File(rootDir + "/workspace-" + workspaceId + "/calendar-" + calendarId + "/boards.json");
 

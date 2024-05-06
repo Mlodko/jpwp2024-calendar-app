@@ -63,6 +63,16 @@ public class UserManager {
         return Optional.of(user);
     }
 
+    public static boolean logoutUser(String authToken) {
+        for (int i = 0; i < loggedInUsers.size(); i++) {
+            if(loggedInUsers.get(i).getAuthToken().equals(authToken)) {
+                loggedInUsers.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void updateUserCache() {
         try {
             userCache = ServerJsonManager.readUsersData();

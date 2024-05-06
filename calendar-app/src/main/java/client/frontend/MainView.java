@@ -25,9 +25,12 @@ public class MainView {
     public Scene createMainView(User loggedInUser, Workspace selectedWorkspace) throws IOException {
         SplitPane splitPane = new SplitPane();
         StackPane leftRibbon = this.setupLeftPane(loggedInUser, selectedWorkspace, splitPane);
-        CalendarView calendarView = this.createCalendarView(loggedInUser);
 
-        splitPane.getItems().addAll(leftRibbon, calendarView);
+        //CalendarView calendarView = this.createCalendarView(selectedWorkspace);
+
+        StackPane kanbanView = this.createKanbanView(selectedWorkspace.getCalendars().get(0).getKanbanBoards().get(0));
+
+        splitPane.getItems().addAll(leftRibbon, /*calendarView*/ kanbanView);
         splitPane.setDividerPosition(0, 0.22);
 
         return new Scene(splitPane, 1280, 720);
@@ -53,31 +56,28 @@ public class MainView {
 
         refresh.setOnAction(event -> {
             System.out.println("refresh clicked UwU");
-            StackPane tmp = new StackPane();
-            Label lbl = new Label("big boobs");
-            tmp.getChildren().add(lbl);
-            splitPane.getItems().set(1, tmp);
             // TODO handle refresh...
         });
 
         calView.setOnAction(event -> {
             // TODO check for issues later
-            CalendarView calendar = this.createCalendarView(loggedInUser);
+            CalendarView calendar = this.createCalendarView(selectedWorkspace);
             splitPane.getItems().set(1, calendar);
         });
 
         logOut.setOnAction(event -> {
 
-            // TODO save all work to server, then logout from server and clear local data
-            // TODO logout locally too!
-
-            if (!loggedInUser.logOut()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
-                alert.showAndWait();
+            try {
+                if (!loggedInUser.logOut(selectedWorkspace)) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
+                    alert.showAndWait();
+                    return;
+                }
+            } catch (Exception e) {
+                System.out.println("setupLeftPane - logOut.setOnAction -> User logout error.");
+                e.printStackTrace();
                 return;
             }
-
-            JsonManager.removeAllLocalData();
 
             Stage loginStage = new Stage();
             loginStage.setTitle("Login");
@@ -123,7 +123,7 @@ public class MainView {
         hbox.setPadding(new Insets(5,5,5,5));
         hbox.getChildren().addAll(calView, refresh, settings);
 
-        VBox calKanbanVbox = this.readCalKanbanList(loggedInUser, splitPane);
+        VBox calKanbanVbox = this.readCalKanbanList(selectedWorkspace, splitPane);
         vbox.getChildren().addAll(hbox, calKanbanVbox);
         leftRibbon.setPadding(new Insets(10,10,10,10));
         leftRibbon.getChildren().addAll(vbox);
@@ -131,12 +131,12 @@ public class MainView {
         return leftRibbon;
     }
 
-    private CalendarView createCalendarView(User loggedInUser) {
+    private CalendarView createCalendarView(Workspace selectedWorkspace) {
         CalendarView calendarView = new CalendarView();
-        ArrayList<Calendar> myCalendars = new ArrayList<>(); //JsonManager.readWorkspace();
+        calendarView.getCalendarSources().clear();  // Delete default calendar source
 
-        // Delete default calendar source
-        calendarView.getCalendarSources().clear();
+        // TODO comeback for any issue check
+        ArrayList<Calendar> myCalendars = selectedWorkspace.getCalendars();
 
         for(client.backend.models.Calendar calendar : myCalendars) {
             CalendarSource source = CalendarFXFactory.create(calendar);
@@ -146,16 +146,8 @@ public class MainView {
         return calendarView;
     }
 
-    private VBox readCalKanbanList(User user, SplitPane mainSplitPane) {
-        ArrayList<client.backend.models.Calendar> usrCalendars = new ArrayList<>();
-
-        try (RequestManager manager = new RequestManager()) {
-
-            // TODO there ya manager.read
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private VBox readCalKanbanList(Workspace workspace, SplitPane mainSplitPane) {
+        ArrayList<client.backend.models.Calendar> usrCalendars = workspace.getCalendars();
 
         VBox vbox = new VBox();
         vbox.setSpacing(8);
@@ -173,7 +165,7 @@ public class MainView {
         addCalendar.setAlignment(Pos.CENTER);
 
         addCalendar.setOnAction(event -> {
-            // TODO handle adding calendar + refresh the view
+            // TODO handle adding and saving calendar + refresh the view
             System.out.println("addCalendar clicked O.O");
         });
 
@@ -183,22 +175,7 @@ public class MainView {
         littleBar.getChildren().addAll(forText, addCalendar);
         vbox.getChildren().addAll(sep, littleBar);
 
-        // maybe with menu buttons?
-        /*
-        TODO:
-            - read user's workspace
-            - read all calendars (and their respective kanbans in the workspace)
-            - make menu buttons like this
-                calendar1:
-                * kanban1
-                * kanban2
-                * ...
-                calendar2:
-                * ...
-                ...
-             - but how to refresh that shit???
-             - still idfk how to refresh that shit
-         */
+        // TODO handle refreshing issue?
 
         for (Calendar cal : usrCalendars) {
             HBox hbox = new HBox();
@@ -209,7 +186,7 @@ public class MainView {
             Button add = new Button("Add New Board");
 
             add.setOnAction(event -> {
-                // add new board to the calendar
+                // TODO add new board to the calendar, save and refresh
             });
 
             for (KanbanBoard board : cal.getKanbanBoards()) {
@@ -244,8 +221,10 @@ public class MainView {
             VBox cardVBox = new VBox();
             cardVBox.setSpacing(3);
 
+            // TODO redo cards in kanban
             for (Card card : entry.getValue()) {
                 Label cardLbl = new Label(card.getTitle());
+                cardLbl.setAlignment(Pos.CENTER);
                 cardVBox.getChildren().add(cardLbl);
             }
 

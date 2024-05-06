@@ -1,11 +1,12 @@
 package client.backend.models;
 
+import client.backend.JsonManager;
+import client.backend.RequestManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Workspace implements Savable<Workspace>{
@@ -140,4 +141,40 @@ public class Workspace implements Savable<Workspace>{
     }
 
     //endregion
+
+    public static Optional<Workspace> constructCompleteWorkspace(String workspaceId, String authToken) {
+        try(RequestManager requestManager = new RequestManager()) {
+            Optional<Workspace> optionalWorkspace = requestManager.getWorkspaces(authToken, workspaceId).orElseThrow().stream().findFirst();
+            if(optionalWorkspace.isEmpty()) {
+                return Optional.empty();
+            }
+            Workspace workspace = optionalWorkspace.get();
+
+            workspace.calendars = requestManager.getCalendars(authToken, workspace.id, workspace.calendarIds).orElseThrow();
+
+            for(Calendar calendar : workspace.calendars) {
+                calendar.setOrphanCards(
+                        requestManager.getOrphanCards(authToken, workspaceId, calendar.getID(), calendar.getOrphanIds()).orElseThrow()
+                );
+
+                calendar.setKanbanBoards(
+                        requestManager.getBoards(authToken, workspaceId, calendar.getID(), calendar.getKanbanIds()).orElseThrow()
+                );
+                for(KanbanBoard board : calendar.getKanbanBoards()) {
+                    for(String columnName : board.getItemIds().keySet()) {
+                        board.addNewItemColumn(columnName);
+                    }
+
+                    board.getItemIds().forEach((columnName, cardIds) -> {
+                        board.addToItemsList(columnName, requestManager.getKanbanCards(authToken, workspaceId,
+                                calendar.getID(), board.getId(), cardIds).orElseThrow());
+                    });
+                }
+            }
+
+            return Optional.of(workspace);
+        } catch(Exception e) {
+            return Optional.empty();
+        }
+    }
 }

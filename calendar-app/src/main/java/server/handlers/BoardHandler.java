@@ -89,16 +89,14 @@ public class BoardHandler extends Handler.Abstract {
         List<String> boardIds = Arrays.stream(parameters.getValue("board-ids").replaceAll("/", "")
                 .split(",")).toList();
 
-        ObjectManager.refreshWorkspaces();
-        ArrayList<KanbanBoard> requestedBoards = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspace.getId().equals(workspaceId))
-                .map(Workspace::getCalendars)
-                .flatMap(ArrayList::stream)
-                .filter(calendar -> calendar.getID().equals(calendarId))
-                .map(Calendar::getKanbanBoards)
-                .flatMap(ArrayList::stream)
-                .filter(board -> boardIds.contains(board.getId()))
-                .collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<KanbanBoard> requestedBoards;
+        try {
+            requestedBoards = ServerJsonManager.readKanbanBoardsData(calendarId, workspaceId);
+        } catch(IOException e) {
+            response.setStatus(500);
+            response.write(true, StandardCharsets.UTF_8.encode("Couldn't parse parameters"), callback);
+            return;
+        }
 
         if(requestedBoards.isEmpty()) {
             response.setStatus(404);
@@ -159,13 +157,8 @@ public class BoardHandler extends Handler.Abstract {
         Type boardArrayType = new TypeToken<ArrayList<KanbanBoard>>(){}.getType();
         ArrayList<KanbanBoard> boardsToAdd = gson.fromJson(rootObject.get("boards").getAsJsonArray(), boardArrayType);
 
-        ObjectManager.refreshWorkspaces();
-        Optional<Calendar> calendarToModify =ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspace.getId().equals(workspaceId))
-                .map(Workspace::getCalendars)
-                .flatMap(ArrayList::stream)
-                .filter(calendar -> calendar.getID().equals(calendarId))
-                .findFirst();
+        //ObjectManager.refreshWorkspaces();
+        Optional<Calendar> calendarToModify = ServerJsonManager.readCalendarStructureData(calendarId, workspaceId);
 
         if(calendarToModify.isEmpty()) {
             response.setStatus(404);
@@ -174,13 +167,10 @@ public class BoardHandler extends Handler.Abstract {
         }
 
         calendarToModify.get().addToKanbanBoards(boardsToAdd);
-        if(ObjectManager.writeWorkspaceFromCache(workspaceId)) {
-            response.setStatus(200);
-            return;
-        }
 
-        response.setStatus(500);
-        response.write(true, StandardCharsets.UTF_8.encode("Couldn't write changes"), callback);
+        ServerJsonManager.writeCalendarData(calendarToModify.get(), workspaceId);
+        ServerJsonManager.writeKanbanBoards(boardsToAdd, calendarId, workspaceId);
+        response.setStatus(200);
     }
 
     private boolean hasBadPostRequestStructure(JsonObject obj) {

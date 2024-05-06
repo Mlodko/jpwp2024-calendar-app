@@ -1,5 +1,6 @@
 package client.backend.models;
 
+import client.backend.JsonManager;
 import client.backend.RequestManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,6 +10,7 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,12 +22,12 @@ public class User implements Savable<User>{
     @Expose String username;
     @Expose String passwordHash;
     @Expose String email;
+    @Expose ArrayList<String> assignedWorkspaceIds;
     String password;
     String authToken; // Token that the server sends on login, used to authenticate the user from now on
 
-    static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
-    // TODO permissions
 
     public User() { }
 
@@ -91,6 +93,26 @@ public class User implements Savable<User>{
         this.authToken = authToken;
         return this;
     }
+
+    public ArrayList<String> getAssignedWorkspaceIds() {
+        if(assignedWorkspaceIds == null) {
+            assignedWorkspaceIds = new ArrayList<>();
+        }
+        return this.assignedWorkspaceIds;
+    }
+
+    public User setAssignedWorkspaceIds(ArrayList<String> workspaceIds) {
+        this.assignedWorkspaceIds = workspaceIds;
+        return this;
+    }
+
+    public void addToAssignedWorkspaceIds(String... workspaceIds) {
+        if(assignedWorkspaceIds == null) {
+            assignedWorkspaceIds = new ArrayList<>();
+        }
+        assignedWorkspaceIds.addAll(List.of(workspaceIds));
+    }
+
     //endregion
 
     //region Logging in/registering
@@ -98,6 +120,8 @@ public class User implements Savable<User>{
     public static Optional<User> login(String username, String password) throws Exception {
         Optional<User> loggedInUser;
 
+        // TODO does it download all data to local?
+        // TODO read workspace ids here
         try(RequestManager manager = new RequestManager()) {
             User temp = new User(username, password);
             loggedInUser = manager.makeLoginRequest(temp);
@@ -119,14 +143,33 @@ public class User implements Savable<User>{
 
     //endregion
 
-    public boolean logOut() {
-        // if registered user still has a valid token -> remove the token and logout
-        // remove the user from server cache
-        // remove their token from server cache
-        // return tru
-        // if any other -> false
+
+    public boolean logOut(Workspace workspace) throws Exception {
+
+        JsonManager.writeALLdata(workspace);
+
+        return this.logOut();
+    }
+    public boolean logOut() throws Exception {
+
+        try (RequestManager manager = new RequestManager()) {
+            if (!manager.makeLogoutRequest(this)) {
+                throw new Exception("Logout request failed");
+            }
+        }
+
+        this.id = "";
+        this.username = "";
+        this.passwordHash = "";
+        this.email = "";
+        this.assignedWorkspaceIds = new ArrayList<>();
+        this.password = "";
+        this.authToken = "";
+        JsonManager.removeAllLocalData();
+
         return true;
     }
+
 
     @Override
     public User loadFromString(String json_text) {

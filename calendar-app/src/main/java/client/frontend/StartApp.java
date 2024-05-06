@@ -4,6 +4,7 @@ import client.backend.models.*;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import javafx.scene.text.Font;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 
 public class StartApp extends Application {
 
-    //private static final Font font = new Font("file:/resources/client.frontend/Roboto-Medium.tff", 22);
+    private static final Font font = Font.loadFont("file:/resources/client.frontend/Roboto-Medium.tff", 22);
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -50,8 +51,8 @@ public class StartApp extends Application {
         // TODO link workspace to user
 
         //stage.setScene(new MainView().createMainView(new User("Aleksander B", "alkohol"), workspace));
-        //stage.setScene(new MainView().createMainView(usr, workspace));
-        stage.setScene(new CardView().createCardView(cards.get(1)));
+        stage.setScene(new MainView().createMainView(usr, workspace));
+        //stage.setScene(new CardView().createCardView(cards.get(1)));
         stage.show();
     }
 

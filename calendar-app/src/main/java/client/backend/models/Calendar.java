@@ -101,6 +101,8 @@ public class Calendar implements Savable<Calendar> {
     }
 
     public Calendar addToKanbanBoards(ArrayList<KanbanBoard> boards) {
+        if(this.kanbanBoards == null) this.kanbanBoards = new ArrayList<>();
+        if(this.kanbanIds == null) this.kanbanIds = new ArrayList<>();
         this.kanbanBoards.addAll(boards);
         this.kanbanIds.addAll(boards.stream().map(KanbanBoard::getId).collect(Collectors.toCollection(ArrayList::new)));
         return this;
@@ -141,8 +143,13 @@ public class Calendar implements Savable<Calendar> {
     }
 
     public Calendar addToOrphanCards(ArrayList<Card> newOrphans) {
+        if(this.orphanCards == null)
+            this.orphanCards = new ArrayList<>();
         this.orphanCards.addAll(newOrphans);
-        this.orphanIds.addAll(newOrphans.stream().map(Card::getId).collect(Collectors.toCollection(ArrayList::new)));
+        for (Card card : newOrphans) {
+            if(!orphanIds.contains(card.getId()))
+                orphanIds.add(card.getId());
+        }
         return this;
     }
 

@@ -172,7 +172,7 @@ public class JsonManager {
     //endregion
     //region WRITERS
 
-    public static void writeALLdata(Workspace workspace) throws IOException {
+    public static void writeALLdata(Workspace workspace /*This workspace *needs* to be complete*/) throws IOException {
         writeWorkspaceData(workspace);
 
         for(Calendar calendar : workspace.getCalendars()) {

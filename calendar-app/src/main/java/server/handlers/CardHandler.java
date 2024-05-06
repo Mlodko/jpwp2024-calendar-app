@@ -8,6 +8,7 @@ import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
 import server.ObjectManager;
@@ -71,8 +72,9 @@ public class CardHandler extends Handler.Abstract {
         List<String> cardIds = Arrays.stream(parameters.getValue("card-ids").replaceAll("/", "").split(",")).toList();
 
         ArrayList<Card> requestedCards;
-        ObjectManager.refreshWorkspaces();
+        //ObjectManager.refreshWorkspaces();
         if(parameters.getValue("type").equals("board-card")) {
+            /*
             requestedCards = ObjectManager.getWorkspaces().stream()
                     .filter(workspace -> workspace.getId().equals(workspaceId))
                     .map(Workspace::getCalendars)
@@ -84,6 +86,14 @@ public class CardHandler extends Handler.Abstract {
                     .flatMap(ArrayList::stream)
                     .filter(card -> cardIds.contains(card.getId()))
                     .collect(Collectors.toCollection(ArrayList::new));
+             */
+            try {
+                requestedCards = ServerJsonManager.readAllKanbanCardsData(calendarId, workspaceId).stream()
+                        .filter(card -> cardIds.contains(card.getId()))
+                        .collect(Collectors.toCollection(ArrayList::new));
+            } catch(Exception e) {
+                requestedCards = new ArrayList<>();
+            }
         } else {
             requestedCards = ObjectManager.getWorkspaces().stream()
                     .filter(workspace -> workspace.getId().equals(workspaceId))
@@ -169,29 +179,26 @@ public class CardHandler extends Handler.Abstract {
         // Parse json
         JsonObject rootObject = rootElement.getAsJsonObject();
         String workspaceId = rootObject.get("workspace-id").getAsString();
+        String calendarId = rootObject.get("calendar-id").getAsString();
         Type cardArrayType = new TypeToken<ArrayList<Card>>(){}.getType();
         ArrayList<Card> cardsToAdd = gson.fromJson(rootObject.get("cards").getAsJsonArray(), cardArrayType);
 
-        // Add to ObjectManager
-
-        Optional<Workspace> workspaceToModify = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspace.getId().equals(workspaceId))
-                .findFirst();
-
-        if(workspaceToModify.isEmpty()) {
-            response.setStatus(404); // Not found
-            response.write(true, StandardCharsets.UTF_8.encode("Workspace not found"), callback);
-            return;
-        }
 
         switch(rootObject.get("type").getAsString()) {
             case "board-card" -> {
                 String boardId = rootObject.get("board-id").getAsString();
                 String columnName = rootObject.get("column-name").getAsString();
 
-                Optional<KanbanBoard> boardToModify = workspaceToModify.get().getCalendars().stream()
-                        .map(Calendar::getKanbanBoards)
-                        .flatMap(ArrayList::stream)
+                ArrayList<KanbanBoard> currentlySavedBoards;
+                try {
+                    currentlySavedBoards = ServerJsonManager.readKanbanBoardsData(calendarId, workspaceId);
+                } catch(IOException e) {
+                    response.setStatus(500); // Server error
+                    response.write(true, StandardCharsets.UTF_8.encode("Couldn't write JSON"), callback);
+                    return;
+                }
+
+                Optional<KanbanBoard> boardToModify = currentlySavedBoards.stream()
                         .filter(board -> board.getId().equals(boardId))
                         .findFirst();
 
@@ -207,37 +214,49 @@ public class CardHandler extends Handler.Abstract {
                     boardToModify.get().addNewItemColumn(columnName, cardsToAdd);
                 }
 
+                for (int i = 0; i < currentlySavedBoards.size(); i++) {
+                    if(currentlySavedBoards.get(i).getId().equals(boardId)) {
+                        currentlySavedBoards.set(i, boardToModify.get());
+                        break;
+                    }
+                }
 
                 try {
-                    ServerJsonManager.writeALLdata(workspaceToModify.get());
-                } catch (IOException e) {
-                    response.setStatus(500); // Server error
-                    response.write(true, StandardCharsets.UTF_8.encode("Couldn't write JSON"), callback);
+                    ServerJsonManager.writeKanbanCards(cardsToAdd, calendarId, workspaceId);
+                    ServerJsonManager.writeKanbanBoards(currentlySavedBoards, calendarId, workspaceId);
+                } catch(IOException e) {
+                    response.setStatus(500);
                     return;
                 }
+
+                response.setStatus(200);
             }
 
             case "orphan-card" -> {
-                String calendarId = rootObject.get("calendar-id").getAsString();
-
-                Optional<Calendar> calendarToModify = workspaceToModify.get().getCalendars().stream()
-                        .filter(calendar -> calendar.getID().equals(calendarId))
-                        .findFirst();
+                Optional<Calendar> calendarToModify;
+                try {
+                    calendarToModify = ServerJsonManager.readCalendarStructureData(calendarId, workspaceId);
+                } catch(IOException e) {
+                    response.setStatus(500);
+                    return;
+                }
 
                 if(calendarToModify.isEmpty()) {
-                    response.setStatus(404); // Not found
-                    response.write(true, StandardCharsets.UTF_8.encode("Calendar not found"), callback);
+                    response.setStatus(404);
                     return;
                 }
 
                 calendarToModify.get().addToOrphanCards(cardsToAdd);
+
                 try {
-                    ServerJsonManager.writeALLdata(workspaceToModify.get());
-                } catch (IOException e) {
-                    response.setStatus(500); // Server error
-                    response.write(true, StandardCharsets.UTF_8.encode("Couldn't write JSON"), callback);
+                    ServerJsonManager.writeOrphanCards(calendarToModify.get().getOrphanCards(), calendarId, workspaceId);
+                    ServerJsonManager.writeCalendarData(calendarToModify.get(), workspaceId);
+                } catch(IOException e) {
+                    response.setStatus(500);
                     return;
                 }
+
+                response.setStatus(200);
             }
 
             default -> {
@@ -255,6 +274,7 @@ public class CardHandler extends Handler.Abstract {
         {
             "type": "board-card",
             "workspace-id": {workspaceId},
+            "calendar-id": {calendarId},
             "board-id": {boardId},
             "column-name": {columnName},
             "cards" : {serialized arraylist<Card>}
@@ -268,8 +288,8 @@ public class CardHandler extends Handler.Abstract {
         }
         */
 
-        if(!(obj.has("type") && obj.has("cards") && obj.has("workspace-id")
-        && obj.get("type").isJsonPrimitive() && obj.get("cards").isJsonArray() && obj.get("workspace-id").isJsonPrimitive())) {
+        if(!(obj.has("type") && obj.has("cards") && obj.has("workspace-id") && obj.has("calendar-id")
+        && obj.get("type").isJsonPrimitive() && obj.get("cards").isJsonArray() && obj.get("workspace-id").isJsonPrimitive() && obj.get("calendar-id").isJsonPrimitive())) {
             return false;
         }
 
@@ -277,8 +297,7 @@ public class CardHandler extends Handler.Abstract {
         && obj.has("column-name") && obj.get("board-id").isJsonPrimitive()
         && obj.get("column-name").isJsonPrimitive()) {
             return false;
-        } else return !(obj.get("type").getAsString().equals("orphan-card") && obj.has("calendar-id")
-                && obj.get("calendar-id").isJsonPrimitive());
+        } else return !(obj.get("type").getAsString().equals("orphan-card"));
     }
 
     private Optional<User> authorizeRequest(Request request, Response response, Callback callback) {

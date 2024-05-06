@@ -22,11 +22,10 @@ import java.util.regex.Pattern;
 
 public class LoginView {
 
-    TextField userTextField;
-    Button loginButton = new Button("Login");
-    Button registerButton = new Button("Register");
-
     public Scene createLoginScene() {
+        Button loginButton = new Button("Login");
+        Button registerButton = new Button("Register");
+
         Label userLabel = new Label("Username");
         TextField userTextField = new TextField();
 
@@ -92,7 +91,7 @@ public class LoginView {
 
         HBox hBox = new HBox(50);
         hBox.setAlignment(Pos.CENTER);
-        hBox.getChildren().addAll(this.loginButton, this.registerButton);
+        hBox.getChildren().addAll(loginButton, registerButton);
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -212,14 +211,17 @@ public class LoginView {
     public Scene chooseWorkspace(User user) {
         Button cancel = new Button("Log out");
         cancel.setOnAction(event -> {
-            if (!user.logOut()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
-                alert.showAndWait();
+            try {
+                if (!user.logOut()) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't log out, dunno why");
+                    alert.showAndWait();
+                    return;
+                }
+            } catch (Exception e) {
+                System.out.println("chooseWorkspace - cancel.setOnAction -> User logout error.");
+                e.printStackTrace();
                 return;
             }
-
-            // TODO try (RequestManager manager = new ...) { manager.logout(thisUser); } ...
-            JsonManager.removeAllLocalData();
 
             Stage loginStage = new Stage();
             loginStage.setTitle("Login");
@@ -239,22 +241,30 @@ public class LoginView {
         });
 
         MenuButton choice = new MenuButton("Choose your workspace:");
-        ArrayList<String> workspaceIDs = new ArrayList<>(); // TODO here read all user's workspace ids
+        ArrayList<String> workspaceIDs = user.getAssignedWorkspaceIds();
 
         for (String id : workspaceIDs) {
             MenuItem tmp = new MenuItem(id);
 
             tmp.setOnAction(event -> {
-                // TODO read "tmp.getText()" workspace
-
                 Stage mainStage = new Stage();
                 mainStage.setTitle("Calendar App");
 
                 Workspace selected;
 
-                try { // TODO somehow download the workspace to local and load it
-                    selected = new Workspace("dupa", "dupa");
+                try {
+                    // TODO somehow download the workspace to local
+                    Optional<Workspace> completeWorkspace = Workspace.constructCompleteWorkspace(id, user.getAuthToken());
+
+                    if (completeWorkspace.isEmpty()){
+                        Alert alert = new Alert (Alert.AlertType.ERROR, "Couldn't read your workspace :(");
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    selected = completeWorkspace.get();
                     mainStage.setScene(new MainView().createMainView(user, selected));
+
                 } catch (IOException e) {
                     e.printStackTrace();
                     new Alert(Alert.AlertType.ERROR, "Couldn't read calendar data.")
@@ -262,7 +272,7 @@ public class LoginView {
                     return;
                 }
 
-                loginButton.getScene().getWindow().hide();
+                cancel.getScene().getWindow().hide();
                 mainStage.show();
             });
 
@@ -277,6 +287,7 @@ public class LoginView {
 
         return new Scene(vbox, 300, 200);
     }
+
 
     private static boolean isEmail(String email) {
         return Pattern.matches("^(.+)@(\\S+)$", email);

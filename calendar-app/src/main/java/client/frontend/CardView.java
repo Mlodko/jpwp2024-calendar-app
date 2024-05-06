@@ -18,10 +18,9 @@ import java.util.Stack;
 
 public class CardView {
 
-    private Parser parser = Parser.builder().build();
-    private HtmlRenderer renderer = HtmlRenderer.builder().build();
-    private WebView webView = new WebView();
-    private String cardCache = new String();
+    private final Parser parser = Parser.builder().build();
+    private final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private final WebView webView = new WebView();
 
     public Scene createCardView(Card card) {
         StackPane mainStack = new StackPane();
@@ -57,21 +56,21 @@ public class CardView {
             mainVBox.getChildren().set(2, this.setupReadView(card));
         });
 
-        Separator vsep = new Separator(Orientation.VERTICAL);
+        Separator vSep = new Separator(Orientation.VERTICAL);
         titleTexts.setSpacing(5);
-        titleTexts.getChildren().addAll(title, vsep, mode);
+        titleTexts.getChildren().addAll(mode, vSep, title);
 
         HBox.setHgrow(forTitleTexts, Priority.ALWAYS);
         forTitleTexts.getChildren().add(titleTexts);
         forButtons.getChildren().addAll(edit, read);
         top.getChildren().addAll(forTitleTexts, forButtons);
 
-        Separator sep = new Separator();
+        Separator hSep = new Separator(Orientation.HORIZONTAL);
 
         mainVBox.setSpacing(5);
         mainVBox.setPadding(new Insets(5,5,5,5));
         VBox.setVgrow(textField, Priority.ALWAYS);
-        mainVBox.getChildren().addAll(top, sep, textField);
+        mainVBox.getChildren().addAll(top, hSep, textField);
         mainStack.setPadding(new Insets(3,3,3,3));
         mainStack.getChildren().add(mainVBox);
 
@@ -104,7 +103,7 @@ public class CardView {
 
         Button save = new Button("Save card");
         save.setOnAction(event -> {
-            card.setDescription(textArea.getText().replaceAll("\n", System.getProperty("line.separator")));
+            card.setDescription(textArea.getText());
             // TODO save to files and server!
         });
 

@@ -7,12 +7,16 @@ import client.frontend.LoginView;
 
 import com.calendarfx.model.CalendarSource;
 import com.calendarfx.view.CalendarView;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
@@ -23,14 +27,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Date;
 
 public class MainView {
 
+    public static User thisUser;
+
     public Scene createMainView(User loggedInUser, Workspace selectedWorkspace) throws IOException {
+        thisUser = loggedInUser;
+
         SplitPane splitPane = new SplitPane();
         StackPane leftRibbon = this.setupLeftPane(loggedInUser, selectedWorkspace, splitPane);
 
+        StackPane rightView = new StackPane();
         CalendarView calendarView = this.createCalendarView(selectedWorkspace);
+        rightView.getChildren().add(calendarView);
 
         splitPane.getItems().addAll(leftRibbon, calendarView);
         splitPane.setDividerPosition(0, 0.22);
@@ -58,7 +69,21 @@ public class MainView {
 
         refresh.setOnAction(event -> {
             System.out.println("refresh clicked UwU");
-            // TODO handle refresh...
+            Workspace loadedWorkspace;
+            try {
+                JsonManager.writeALLdata(selectedWorkspace);
+                loadedWorkspace = JsonManager.readCompleteWorkspaceData();
+            } catch (Exception e) {
+                System.out.println("fok");
+                e.printStackTrace();
+                return;
+            }
+
+            splitPane.getItems().set(0, setupLeftPane(loggedInUser, loadedWorkspace, splitPane));
+            splitPane.getItems().set(1, createCalendarView(loadedWorkspace));
+
+            //splitPane.getItems().set(0, splitPane.getItems().get(0));
+
         });
 
         calView.setOnAction(event -> {
@@ -177,7 +202,6 @@ public class MainView {
         littleBar.getChildren().addAll(forText, addCalendar);
         vbox.getChildren().addAll(sep, littleBar);
 
-        // TODO handle refreshing issue?
 
         for (Calendar cal : usrCalendars) {
             HBox hbox = new HBox();
@@ -188,14 +212,23 @@ public class MainView {
             Button add = new Button("Add New Board");
 
             add.setOnAction(event -> {
-                // TODO add new board to the calendar, save and refresh
+                TextInputDialog input = new TextInputDialog();
+                input.setOnCloseRequest(subEvent ->{
+                    System.out.println("cyce");
+                });
+                input.show();
+                input.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, _event -> {
+                    //System.out.println("adding new board with title: " + input.getEditor().getText());
+                    cal.addToKanbanBoards(new KanbanBoard(input.getEditor().getText()));
+                    input.close();
+                });
             });
 
             for (KanbanBoard board : cal.getKanbanBoards()) {
                 MenuItem tmpItem = new MenuItem(board.getTitle());
 
                 tmpItem.setOnAction(event -> {
-                    mainSplitPane.getItems().set(1, this.createKanbanView(board));
+                    mainSplitPane.getItems().set(1, this.createKanbanView(workspace, board));
                 });
 
                 tmp.getItems().add(tmpItem);
@@ -208,7 +241,7 @@ public class MainView {
         return vbox;
     }
 
-    private ScrollPane createKanbanView(KanbanBoard board) {
+    private ScrollPane createKanbanView(Workspace workspace, KanbanBoard board) {
         ScrollPane scrollKanbanView = new ScrollPane();
         scrollKanbanView.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
@@ -230,10 +263,12 @@ public class MainView {
             cardVBox.setSpacing(5);
 
             for (Card card : entry.getValue()) {
-                cardVBox.getChildren().add(createCard(card));
+                StackPane newCard = createCard(workspace, board, entry.getKey(), card);
+                addDragDropToCard(newCard);
+                cardVBox.getChildren().add(newCard);
             }
 
-            cardVBox.getChildren().add(this.createLastCard());
+            cardVBox.getChildren().add(this.createLastCard(workspace, board, entry.getKey()));
 
             Separator sep = new Separator(Orientation.HORIZONTAL);
             mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
@@ -246,7 +281,7 @@ public class MainView {
         return scrollKanbanView;
     }
 
-    private StackPane createCard(Card card) {
+    private StackPane createCard(Workspace workspace, KanbanBoard board, String colName, Card card) {
         StackPane stack = new StackPane();
         stack.setPadding(new Insets(3,3,3,3));
         stack.setAlignment(Pos.CENTER);
@@ -287,17 +322,12 @@ public class MainView {
         vbox.getChildren().addAll(forCardName, hSep, hbox);
         stack.getChildren().add(vbox);
 
-        stack.setOnDragDetected(event -> {
-            System.out.println("Drag detected on card " + card.getId());
-            //Dragboard dragboard = stack.startDragAndDrop(TransferMode.MOVE);
-        });
-
         stack.setOnMouseClicked(event -> {
             Stage cardStage = new Stage();
             cardStage.setTitle(card.getTitle());
 
             try {
-                cardStage.setScene(new CardView().createCardView(card));
+                cardStage.setScene(new CardView().createCardView(board, colName, card, workspace));
             } catch (Exception e) {
                 System.out.println("debiluuuuuu");
                 e.printStackTrace();
@@ -311,7 +341,7 @@ public class MainView {
     }
 
     // how to get the fucking list index here?
-    private StackPane createLastCard(/* StackPane mainStack */) {
+    private StackPane createLastCard(Workspace workspace, KanbanBoard board, String column) {
         StackPane stack = new StackPane();
         stack.setPadding(new Insets(3,3,3,3));
         stack.setAlignment(Pos.CENTER);
@@ -321,11 +351,67 @@ public class MainView {
         stack.getChildren().add(plus);
 
         stack.setOnMouseClicked(event -> {
-            System.out.println("added new card UwU");
-            // TODO handle adding new card...
+            Card newCard = new Card();
+            newCard.setCreationTime(new Date());
+
+            Stage cardStage = new Stage();
+            cardStage.setTitle("Create new card for " + column + " list in " + board.getTitle() + " board");
+
+            try {
+                cardStage.setScene(new CardView().createCardView(board, column, newCard, workspace));
+            } catch (Exception e) {
+                System.out.println("Couldn't create new card stage, sadly");
+                e.printStackTrace();
+                return;
+            }
+
+            cardStage.show();
         });
 
         return stack;
     }
 
+    private void addDragDropToCard(StackPane card) {
+        card.setOnDragDetected(mouseEvent -> {
+            card.setCursor(Cursor.CLOSED_HAND);
+            Dragboard db = card.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            content.putString("card");
+            db.setContent(content);
+            mouseEvent.consume();
+        });
+
+        card.setOnDragOver(event -> {
+            if(event.getGestureSource() != card && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+
+        card.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if(db.hasString()) {
+                Pane parent = (Pane) card.getParent();
+                parent.getChildren().remove(card);
+
+                Pane targetColumn = determineTargetColumn(event);
+                if(targetColumn != null) {
+                    targetColumn.getChildren().add(card);
+                    success = true;
+                }
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    private Pane determineTargetColumn(DragEvent event) {
+        for (Node node : event.getPickResult().getIntersectedNode().getParent().getChildrenUnmodifiable()) {
+            if (node.getBoundsInParent().contains(event.getX(), event.getY())) {
+                return (Pane) node;
+            }
+        }
+        return null;
+    }
 }

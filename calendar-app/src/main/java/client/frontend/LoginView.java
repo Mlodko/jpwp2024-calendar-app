@@ -253,7 +253,6 @@ public class LoginView {
                 Workspace selected;
 
                 try {
-                    // TODO somehow download the workspace to local
                     Optional<Workspace> completeWorkspace = Workspace.constructCompleteWorkspace(id, user.getAuthToken());
 
                     if (completeWorkspace.isEmpty()){
@@ -263,6 +262,7 @@ public class LoginView {
                     }
 
                     selected = completeWorkspace.get();
+                    JsonManager.writeALLdata(selected);
                     mainStage.setScene(new MainView().createMainView(user, selected));
 
                 } catch (IOException e) {

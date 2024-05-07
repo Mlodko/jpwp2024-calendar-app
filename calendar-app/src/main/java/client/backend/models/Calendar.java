@@ -26,8 +26,6 @@ public class Calendar implements Savable<Calendar> {
 
     private final static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
-    //TODO ArrayList<User> users;
-
     public Calendar(String id) {
         this.id = id;
     }

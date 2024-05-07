@@ -101,7 +101,7 @@ public class JsonManager {
     public static ArrayList<Card> readAllKanbanCardsData(String calendarId) throws IOException {
         File cardsFile = new File(rootDir + "/workspace/calendar-" + calendarId + "/cards.json");
 
-        if (!cardsFile.getParentFile().mkdirs() && !cardsFile.exists()) {
+        if (!cardsFile.getParentFile().exists() && !cardsFile.getParentFile().mkdirs()) {
             throw new IOException("Unable to create directory " + cardsFile.getParentFile().getAbsolutePath());
         }
 

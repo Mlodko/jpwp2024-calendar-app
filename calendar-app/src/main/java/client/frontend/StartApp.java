@@ -21,6 +21,7 @@ public class StartApp extends Application {
         //stage.setScene(new LoginView().createLoginScene());
 
         User usr = new User("bob", "bobowski");
+/*
         Workspace workspace = new Workspace("sjjs", "dupa");
 
         Calendar cal1 = new Calendar("jeden");
@@ -29,7 +30,7 @@ public class StartApp extends Application {
         KanbanBoard board1 = new KanbanBoard("board jeden").addNewItemColumn("cyce").addNewItemColumn("dupa");
         KanbanBoard board2 = new KanbanBoard("board dwa").addNewItemColumn("sranie");
         board1.setTitle("guwno");
-        
+
         ArrayList<KanbanBoard> boardlist = new ArrayList<>();
 
         ArrayList<Card> cards1 = new ArrayList<>();
@@ -55,12 +56,11 @@ public class StartApp extends Application {
         cal1.setKanbanBoards(boardlist);
         workspace.addToCalendars(cal2);
         workspace.addToCalendars(cal1);
-
-        // TODO link workspace to user
-
+*/
         //stage.setScene(new MainView().createMainView(new User("Aleksander B", "alkohol"), workspace));
-        stage.setScene(new MainView().createMainView(usr, workspace));
+        //stage.setScene(new MainView().createMainView(usr, workspace));
         //stage.setScene(new CardView().createCardView(cards.get(1)));
+        stage.setScene(new LoginView().createLoginScene());
         stage.show();
     }
 

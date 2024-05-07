@@ -135,8 +135,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         }
 
         if(!itemsLists.containsKey(columnTitle)) {
-            throw new java.util.NoSuchElementException("The item list with title " + columnTitle + " doesn't exist." +
-                    "\nTry calling addNewItemColumn()" );
+            addNewItemColumn(columnTitle, items);
+            return this;
         }
 
         itemsLists.get(columnTitle).addAll(items);
@@ -153,7 +153,9 @@ public class KanbanBoard implements Savable<KanbanBoard> {
                     "\nTry calling addToItemsList()");
         }
         itemsLists.put(columnTitle, new ArrayList<Card>());
-        itemIds.put(columnTitle, new ArrayList<>());
+        if(!itemIds.containsKey(columnTitle)) {
+            itemIds.put(columnTitle, new ArrayList<>());
+        }
         this.lastModifiedTime = new Date();
         return this;
     }
@@ -162,8 +164,8 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         if(itemsLists == null) itemsLists = new HashMap<>();
         if(itemIds == null) itemIds = new HashMap<>();
         if (itemsLists.containsKey(columnTitle)) {
-            throw new IllegalArgumentException("The item list with title " + columnTitle + " already exists." +
-                    "\nTry calling addToItemsList()");
+            addToItemsList(columnTitle, items);
+            return this;
         }
         itemsLists.put(columnTitle, items);
         itemIds.put(columnTitle, items.stream()

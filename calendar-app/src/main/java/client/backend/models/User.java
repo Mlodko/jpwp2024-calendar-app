@@ -120,8 +120,6 @@ public class User implements Savable<User>{
     public static Optional<User> login(String username, String password) throws Exception {
         Optional<User> loggedInUser;
 
-        // TODO does it download all data to local?
-        // TODO read workspace ids here
         try(RequestManager manager = new RequestManager()) {
             User temp = new User(username, password);
             loggedInUser = manager.makeLoginRequest(temp);

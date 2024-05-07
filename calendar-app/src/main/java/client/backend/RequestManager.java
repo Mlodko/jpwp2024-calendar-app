@@ -541,7 +541,7 @@ public class RequestManager implements AutoCloseable {
                     .param("type", "board-card")
                     .param("workspace-id", workspaceId)
                     .param("calendar-id", calendarId)
-                    .param("board-id", boardId)
+                    .param("board-id", URLEncoder.encode(boardId, StandardCharsets.UTF_8))
                     .param("card-ids", encodedIds)
                     .headers(req -> req.add(HttpHeader.AUTHORIZATION, authToken));
         } else {

@@ -1,6 +1,9 @@
 package client.frontend;
 
+import client.backend.JsonManager;
+import client.backend.RequestManager;
 import client.backend.models.Card;
+import client.backend.models.KanbanBoard;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -14,7 +17,11 @@ import javafx.scene.web.WebView;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 
-import java.util.Stack;
+import client.backend.models.User;
+import client.backend.models.Workspace;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class CardView {
 
@@ -22,7 +29,10 @@ public class CardView {
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
     private final WebView webView = new WebView();
 
-    public Scene createCardView(Card card) {
+    private Workspace workspace;
+
+    public Scene createCardView(KanbanBoard board, String columnTitle, Card card, Workspace workspace) {
+        this.workspace = workspace;
         StackPane mainStack = new StackPane();
         VBox mainVBox = new VBox();
 
@@ -33,8 +43,10 @@ public class CardView {
 
         AnchorPane forTitleTexts = new AnchorPane();
         HBox titleTexts = new HBox();
-        Label title = new Label(card.getTitle());
-        title.setAlignment(Pos.CENTER);
+        TextField title = new TextField(card.getTitle());
+        title.setAlignment(Pos.CENTER_LEFT);
+        title.setPrefWidth(200);
+        title.setEditable(false);
         Label mode = new Label("Preview Mode");
         mode.setAlignment(Pos.CENTER);
 
@@ -48,11 +60,13 @@ public class CardView {
 
         edit.setOnAction(event -> {
             mode.setText("Edit Mode");
-            mainVBox.getChildren().set(2, this.setupEditView(card));
+            title.setEditable(true);
+            mainVBox.getChildren().set(2, this.setupEditView(board, columnTitle, card, title));
         });
 
         read.setOnAction(event -> {
             mode.setText("Preview Mode");
+            title.setEditable(false);
             mainVBox.getChildren().set(2, this.setupReadView(card));
         });
 
@@ -87,7 +101,7 @@ public class CardView {
         return mainField;
     }
 
-    private StackPane setupEditView(Card card) {
+    private StackPane setupEditView(KanbanBoard board, String column, Card card, TextField titleField) {
         String cardContent = card.getDescription();
         TextArea textArea = new TextArea();
         textArea.setText(cardContent);
@@ -103,8 +117,42 @@ public class CardView {
 
         Button save = new Button("Save card");
         save.setOnAction(event -> {
+            card.setTitle(titleField.getText());
             card.setDescription(textArea.getText());
-            // TODO save to files and server!
+            card.setLastModifyTime(new Date());
+
+            if (!board.getItemIds().get(column).contains(card.getId())) {
+                board.addToItemsList(column, card);
+                ArrayList<KanbanBoard> boardArrayList = workspace.getCalendars().stream()
+                        .filter(calendar -> calendar.getID().equals(board.getCalendarId()))
+                        .findFirst().get()
+                        .getKanbanBoards();
+                ArrayList<Card> cardArrayList = board.getItems();
+
+                try (RequestManager manager = new RequestManager()){
+                    JsonManager.writeKanbanCards(cardArrayList, board.getCalendarId());
+                    JsonManager.writeKanbanBoards(boardArrayList, board.getCalendarId());
+                    manager.postBoards(MainView.thisUser.getAuthToken(), workspace.getId(),
+                                        board.getCalendarId(), boardArrayList);
+                    manager.postKanbanCards(MainView.thisUser.getAuthToken(), workspace.getId(),
+                                            board.getCalendarId(), board.getId(), column, cardArrayList);
+                } catch (Exception e) {
+                    System.out.println("Couldn't write all kanban cards and boards :(");
+                }
+
+            }
+            else {
+                ArrayList<Card> cardArrayList = board.getItems();
+
+                try (RequestManager manager = new RequestManager()) {
+                    JsonManager.writeKanbanCards(cardArrayList, board.getCalendarId());
+                    manager.postKanbanCards(MainView.thisUser.getAuthToken(), workspace.getId(),
+                            board.getCalendarId(), board.getId(), column, cardArrayList);
+
+                } catch (Exception e) {
+                    System.out.println("Couldn't write all kanban cards :(");
+                }
+            }
         });
 
         VBox vbox = new VBox();

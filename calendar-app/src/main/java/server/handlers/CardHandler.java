@@ -17,6 +17,7 @@ import server.UserManager;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +70,8 @@ public class CardHandler extends Handler.Abstract {
 
         String workspaceId = parameters.getValue("workspace-id");
         String calendarId = parameters.getValue("calendar-id");
-        List<String> cardIds = Arrays.stream(parameters.getValue("card-ids").replaceAll("/", "").split(",")).toList();
+        List<String> cardIds = Arrays.stream(
+                URLDecoder.decode(parameters.getValue("card-ids"), StandardCharsets.UTF_8).replaceAll("/", "").split(",")).toList();
 
         ArrayList<Card> requestedCards;
         //ObjectManager.refreshWorkspaces();

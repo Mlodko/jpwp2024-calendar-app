@@ -13,14 +13,6 @@ import java.util.Date;
 
 import java.util.UUID;
 
-/*
-    TODO - it all comes with FILE PATHS ISSUE:
-        - [ ] single kanban's data reading from JSON and upgrading/writing into JSON
-        - [ ] single card's data reading from JSON and upgrading/writing into JSON
-        - [ ] single calendar's data reading from JSON and upgrading/writing into JSON
- */
-
-
 public class Card implements Savable<Card> {
     // fields with getters and setters:
 
@@ -141,6 +133,10 @@ public class Card implements Savable<Card> {
         this.creationTime = newCreationTime;
         this.lastModifyTime = new Date();
         return this;
+    }
+
+    public void setLastModifyTime(Date newTime) {
+        this.lastModifyTime = newTime;
     }
 
     public Date getLastModifyTime() {

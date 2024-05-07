@@ -173,6 +173,7 @@ public class Workspace implements Savable<Workspace>{
             }
 
             return Optional.of(workspace);
+
         } catch(Exception e) {
             return Optional.empty();
         }

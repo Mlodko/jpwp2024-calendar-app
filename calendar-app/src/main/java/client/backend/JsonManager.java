@@ -268,59 +268,5 @@ public class JsonManager {
             writer.flush();
         }
     }
-
     //endregion
-
-    public static void main(String[] args) throws IOException {
-        ArrayList<Card> cards = new ArrayList<>(List.of(
-                new Card("Card 1", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 2", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 3", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
-        ));
-        ArrayList<KanbanBoard> boards = new ArrayList<>(List.of(
-                new KanbanBoard("Board 1", "desc", new Date(), new Date(), new Calendar(), getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1), new HashMap<>())
-        ));
-        boards.get(0).addNewItemColumn("Column 1", cards);
-
-        ArrayList<Card> orphanCards = new ArrayList<>(List.of(
-                new Card("Card 4", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 5", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 6", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
-        ));
-
-        ArrayList<User> users = new ArrayList<>(List.of(
-                new User("User1", sha256Hex("password123"), "test@agh.edu.pl")
-        ));
-
-        Workspace workspace = new Workspace("Test workspace", "Description");
-        workspace.setMembers(users);
-
-        ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar(orphanCards, boards, users, workspace)
-        ));
-
-        workspace.setCalendars(calendars);
-        boards.get(0).setCalendar(calendars.get(0));
-
-        writeWorkspaceData(workspace);
-    }
-
-    static Date getRandomDateWithin7Days(long multiplier) {
-        // Get the current date
-        Date currentDate = new Date();
-
-        // Create a Calendar instance and set it to the current date
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.setTime(currentDate);
-
-        // Generate a random number of milliseconds within 7 days
-        Random random = new Random();
-        long randomMillisToAdd = multiplier * Math.abs(random.nextLong() % (7 * 24 * 60 * 60 * 1000));
-
-        // Add the random duration to the current date
-        calendar.add(java.util.Calendar.MILLISECOND, (int) randomMillisToAdd);
-
-        // Return the random date
-        return calendar.getTime();
-    }
 }

@@ -68,26 +68,21 @@ public class MainView {
         MenuItem changeWorkspace = new MenuItem("Change Workspace");
 
         refresh.setOnAction(event -> {
-            System.out.println("refresh clicked UwU");
             Workspace loadedWorkspace;
             try {
                 JsonManager.writeALLdata(selectedWorkspace);
                 loadedWorkspace = JsonManager.readCompleteWorkspaceData();
             } catch (Exception e) {
-                System.out.println("fok");
+                System.out.println("refresh -> writeALLData() didn't work, frankly");
                 e.printStackTrace();
                 return;
             }
 
             splitPane.getItems().set(0, setupLeftPane(loggedInUser, loadedWorkspace, splitPane));
             splitPane.getItems().set(1, createCalendarView(loadedWorkspace));
-
-            //splitPane.getItems().set(0, splitPane.getItems().get(0));
-
         });
 
         calView.setOnAction(event -> {
-            // TODO check for issues later
             CalendarView calendar = this.createCalendarView(selectedWorkspace);
             splitPane.getItems().set(1, calendar);
         });
@@ -162,7 +157,6 @@ public class MainView {
         CalendarView calendarView = new CalendarView();
         calendarView.getCalendarSources().clear();  // Delete default calendar source
 
-        // TODO comeback for any issue check
         ArrayList<Calendar> myCalendars = selectedWorkspace.getCalendars();
 
         for(client.backend.models.Calendar calendar : myCalendars) {
@@ -192,7 +186,6 @@ public class MainView {
         addCalendar.setAlignment(Pos.CENTER);
 
         addCalendar.setOnAction(event -> {
-            // TODO handle adding and saving calendar + refresh the view
             Calendar calendarToAdd = new Calendar();
             workspace.addToCalendars(calendarToAdd);
             ArrayList<Calendar> calendarArrayList = new ArrayList<>();
@@ -208,16 +201,12 @@ public class MainView {
                 e.printStackTrace();
                 new Alert(Alert.AlertType.ERROR, "Couldn't create new calendar").show();
             }
-
-            System.out.println("addCalendar clicked O.O");
         });
 
         Separator sep = new Separator(Orientation.HORIZONTAL);
-
         HBox.setHgrow(forText, Priority.ALWAYS);
         littleBar.getChildren().addAll(forText, addCalendar);
         vbox.getChildren().addAll(sep, littleBar);
-
 
         for (Calendar cal : usrCalendars) {
             HBox hbox = new HBox();
@@ -229,9 +218,7 @@ public class MainView {
 
             add.setOnAction(event -> {
                 TextInputDialog input = new TextInputDialog();
-                input.setOnCloseRequest(subEvent ->{
-                    System.out.println("cyce");
-                });
+
                 input.show();
                 input.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, _event -> {
                     //System.out.println("adding new board with title: " + input.getEditor().getText());
@@ -327,13 +314,11 @@ public class MainView {
         forCardName.setPadding(new Insets(3,3,3,3));
         Label cardName = new Label(card.getTitle());
         cardName.setPadding(new Insets(3,3,3,3));
-        //cardName.setStyle("-fx-background-color: #bebebe;");
         cardName.setAlignment(Pos.CENTER);
         forCardName.getChildren().add(cardName);
 
         Label startDate = new Label(card.getStartTime().toString());
         startDate.setPadding(new Insets(3,3,3,3));
-        //startDate.setStyle("-fx-background-color: #bebebe;");
         startDate.setAlignment(Pos.CENTER);
 
         Separator vSep = new Separator(Orientation.VERTICAL);
@@ -341,7 +326,6 @@ public class MainView {
 
         Label endDate = new Label(card.getEndTime().toString());
         endDate.setPadding(new Insets(3,3,3,3));
-        //endDate.setStyle("-fx-background-color: #bebebe;");
         endDate.setAlignment(Pos.CENTER);
 
         hbox.getChildren().addAll(startDate, vSep, endDate);
@@ -355,7 +339,7 @@ public class MainView {
             try {
                 cardStage.setScene(new CardView().createCardView(board, colName, card, workspace));
             } catch (Exception e) {
-                System.out.println("debiluuuuuu");
+                System.out.println("Couldn't create cardview after clicking kanban card ;/");
                 e.printStackTrace();
                 return;
             }
@@ -366,7 +350,6 @@ public class MainView {
         return stack;
     }
 
-    // how to get the fucking list index here?
     private StackPane createLastCard(Workspace workspace, KanbanBoard board, String column) {
         StackPane stack = new StackPane();
         stack.setPadding(new Insets(3,3,3,3));

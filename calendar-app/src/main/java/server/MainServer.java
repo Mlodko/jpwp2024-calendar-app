@@ -69,7 +69,6 @@ public class MainServer {
         }
     }
 
-    // check if required files and directories exist, if no - do create them silly bitch
     private static void setupDirs() throws Exception {
         String root = ServerJsonManager.getRootDirectoryPath().getParent().toString();
         File file = new File(root + "/users.json");
@@ -92,4 +91,3 @@ public class MainServer {
         System.out.println();
     }
 }
-

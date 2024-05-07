@@ -23,14 +23,14 @@ public abstract class CalendarFXFactory {
         kanbanCalendar.setStyle(Calendar.Style.STYLE1);
 
         ArrayList<Entry> kanbanEntries = myCalendar.getKanbanBoards().stream()
-            .filter(KanbanBoard::hasStartAndEndDate)
-            .map(kanbanBoard -> {
-                Interval interval = new Interval(
-                    LocalDateTime.ofInstant(kanbanBoard.getStartTime().toInstant(), ZoneId.systemDefault()),
-                    LocalDateTime.ofInstant(kanbanBoard.getEndTime().toInstant(), ZoneId.systemDefault()),
-                    ZoneId.systemDefault());
-                return new Entry(kanbanBoard.getTitle(), interval);
-        }).collect(Collectors.toCollection(ArrayList::new));
+                .filter(KanbanBoard::hasStartAndEndDate)
+                .map(kanbanBoard -> {
+                    Interval interval = new Interval(
+                            LocalDateTime.ofInstant(kanbanBoard.getStartTime().toInstant(), ZoneId.systemDefault()),
+                            LocalDateTime.ofInstant(kanbanBoard.getEndTime().toInstant(), ZoneId.systemDefault()),
+                            ZoneId.systemDefault());
+                    return new Entry(kanbanBoard.getTitle(), interval);
+                }).collect(Collectors.toCollection(ArrayList::new));
 
         kanbanCalendar.addEntries(kanbanEntries);
 
@@ -39,17 +39,17 @@ public abstract class CalendarFXFactory {
         cardCalendar.setStyle(Calendar.Style.STYLE2);
         ArrayList<Entry> cardEntries = new ArrayList<>();
 
-        for(KanbanBoard board : myCalendar.getKanbanBoards()) {
+        for (KanbanBoard board : myCalendar.getKanbanBoards()) {
             cardEntries.addAll(board.getItemsLists().values().stream().flatMap(Collection::stream)
-                .filter(Card::hasStartAndEndDate)
-                .map(card -> {
-                    Interval interval = new Interval(
-                         LocalDateTime.ofInstant(card.getStartTime().toInstant(), ZoneId.systemDefault()),
-                         LocalDateTime.ofInstant(card.getStartTime().toInstant(), ZoneId.systemDefault()),
-                         ZoneId.systemDefault()
-                    );
-                    return new Entry(card.getTitle(), interval);
-                }).collect(Collectors.toCollection(ArrayList::new)));
+                    .filter(Card::hasStartAndEndDate)
+                    .map(card -> {
+                        Interval interval = new Interval(
+                                LocalDateTime.ofInstant(card.getStartTime().toInstant(), ZoneId.systemDefault()),
+                                LocalDateTime.ofInstant(card.getStartTime().toInstant(), ZoneId.systemDefault()),
+                                ZoneId.systemDefault()
+                        );
+                        return new Entry(card.getTitle(), interval);
+                    }).collect(Collectors.toCollection(ArrayList::new)));
         }
 
         //Add from orphan cards
@@ -66,11 +66,9 @@ public abstract class CalendarFXFactory {
         );
 
         cardCalendar.addEntries(cardEntries);
-
         source.getCalendars().add(kanbanCalendar);
         source.getCalendars().add(cardCalendar);
 
         return source;
     }
-
 }

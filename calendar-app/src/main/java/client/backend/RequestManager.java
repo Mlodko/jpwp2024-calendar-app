@@ -323,7 +323,6 @@ public class RequestManager implements AutoCloseable {
     }
 
     public boolean postCalendars(String authToken, String workspaceId, ArrayList<Calendar> calendars) {
-
         // Prepare json
         JsonObject rootObject = new JsonObject();
         rootObject.addProperty("workspace-id", workspaceId);
@@ -743,113 +742,5 @@ public class RequestManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         httpClient.stop();
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        /*
-        What works:
-        - [x] login
-        - [x] register
-        - workspace
-            - GET [x]
-            - POST [x]
-        - calendar
-            - GET [x]
-            - POST [x]
-        - board
-            - GET [x]
-            - POST [x]
-        - kanban card
-            - GET [x]
-            - POST [x]
-        - orphan card
-            - GET [x]
-            - POST [x]
-
-         IT IS DONE. BILLIONS SHALL PERISH FROM ITS GLOW.
-         */
-
-        User user = new User("klaun", "65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5", "test@test.test");
-        try(RequestManager requestManager = new RequestManager()) {
-            Optional<User> loggedInUser = requestManager.makeLoginRequest(user);
-            System.out.println("Login: " + loggedInUser.isPresent());
-
-            System.out.println("GET workspace: " + requestManager.getWorkspaces(loggedInUser.get().getAuthToken(), "test").isPresent());
-
-            Calendar calendar = gson.fromJson("{\n" +
-                    "    \"id\": \"bfcb7f4e-4eed-4cb8-8394-8030db83d3cc\",\n" +
-                    "    \"kanbanIds\": [\n" +
-                    "      \"Board 1\"\n" +
-                    "    ],\n" +
-                    "    \"orphanCardIds\": [\n" +
-                    "      \"93f92c83-1788-4e97-ad72-83a049fd57a4\",\n" +
-                    "      \"72d8042f-71ac-471e-b13f-c04e55fceba1\",\n" +
-                    "      \"1947e2cd-6ae1-495a-9379-7e15b7443446\"\n" +
-                    "    ],\n" +
-                    "    \"memberIds\": [\n" +
-                    "      \"f3803917-c90d-4046-9ced-75395e110a8a\"\n" +
-                    "    ],\n" +
-                    "    \"workspaceId\": \"6e3b4452-c71a-425b-9609-b2f5097f8ab8\"\n" +
-                    "  }", Calendar.class);
-            ArrayList<Calendar> calendarArrayList = new ArrayList<>();
-            calendarArrayList.add(calendar);
-            System.out.println("POST calendar: " + requestManager.postCalendars(loggedInUser.get().getAuthToken(), "test", calendarArrayList));
-
-            System.out.println("GET calendar: " + requestManager.getCalendars(loggedInUser.get().getAuthToken(), "test", "1").isPresent());
-
-            KanbanBoard board = gson.fromJson("{\n" +
-                    "    \"id\": \"Board 1\",\n" +
-                    "    \"title\": \"desc\",\n" +
-                    "    \"createTime\": \"Apr 29, 2024, 7:48:57 PM\",\n" +
-                    "    \"lastModifiedTime\": \"Apr 29, 2024, 7:48:57 PM\",\n" +
-                    "    \"calendarId\": \"bfcb7f4e-4eed-4cb8-8394-8030db83d3cc\",\n" +
-                    "    \"itemIds\": {\n" +
-                    "      \"Column 1\": [\n" +
-                    "        \"53f97d5d-aa79-4f62-8369-09472610a483\",\n" +
-                    "        \"fadcb850-49f6-4276-a82c-9bd6656bc3f7\",\n" +
-                    "        \"e39751ac-1cd5-4891-84dd-f85b1a2e1f3d\"\n" +
-                    "      ]\n" +
-                    "    },\n" +
-                    "    \"startTime\": \"Apr 25, 2024, 1:17:33 PM\",\n" +
-                    "    \"endTime\": \"May 2, 2024, 11:42:27 AM\"\n" +
-                    "  }", KanbanBoard.class);
-            ArrayList<KanbanBoard> boards = new ArrayList<>();
-            boards.add(board);
-
-            System.out.println("POST board: " + requestManager.postBoards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", boards));
-            System.out.println("GET board: " + requestManager.getBoards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", "Board 1").isPresent());
-
-            Card card = gson.fromJson("{\n" +
-                    "    \"id\": \"53f97d5d-aa79-4f62-8369-09472610a483\",\n" +
-                    "    \"title\": \"Card 4\",\n" +
-                    "    \"description\": \"Desc\",\n" +
-                    "    \"startTime\": \"Apr 24, 2024, 4:43:47 AM\",\n" +
-                    "    \"endTime\": \"May 4, 2024, 6:53:04 PM\",\n" +
-                    "    \"creationTime\": \"Apr 29, 2024, 7:48:57 PM\",\n" +
-                    "    \"lastModifyTime\": \"Apr 29, 2024, 7:48:57 PM\"\n" +
-                    "  }", Card.class);
-            ArrayList<Card> cards = new ArrayList<>();
-            cards.add(card);
-
-            System.out.println("POST kanban card: " + requestManager.postKanbanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", "Board 1", "Column 1", cards));
-            System.out.println("GET kanban card: " + requestManager.getKanbanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", "Board 1", "53f97d5d-aa79-4f62-8369-09472610a483").isPresent());
-
-            Card orphan = gson.fromJson("{\n" +
-                    "    \"id\": \"72d8042f-71ac-471e-b13f-c04e55fceba1\",\n" +
-                    "    \"title\": \"Card 5\",\n" +
-                    "    \"description\": \"Desc\",\n" +
-                    "    \"startTime\": \"Apr 22, 2024, 10:46:39 PM\",\n" +
-                    "    \"endTime\": \"May 2, 2024, 8:42:53 AM\",\n" +
-                    "    \"creationTime\": \"Apr 29, 2024, 7:48:57 PM\",\n" +
-                    "    \"lastModifyTime\": \"Apr 29, 2024, 7:48:57 PM\"\n" +
-                    "  }", Card.class);
-
-            ArrayList<Card> orphans = new ArrayList<>();
-            orphans.add(orphan);
-            System.out.println("POST orphan card: " + requestManager.postOrphanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", orphans));
-            System.out.println("GET orphan card: " + requestManager.getOrphanCards(loggedInUser.get().getAuthToken(), "test", "bfcb7f4e-4eed-4cb8-8394-8030db83d3cc", "72d8042f-71ac-471e-b13f-c04e55fceba1").isPresent());
-            System.out.println("Logout: " + requestManager.makeLogoutRequest(loggedInUser.get()));
-        }
     }
 }

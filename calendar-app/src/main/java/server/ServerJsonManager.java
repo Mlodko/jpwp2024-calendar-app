@@ -32,7 +32,6 @@ public class ServerJsonManager {
     public static Path getRootDirectoryPath() { return rootDir; }
 
     //region READERS
-
     public static ArrayList<Workspace> readALLdata() {
         if(rootDir.toFile().listFiles() == null) {
             return new ArrayList<>();
@@ -48,7 +47,6 @@ public class ServerJsonManager {
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println(e.getMessage());
-                continue;
             }
         }
         return workspaces;
@@ -118,7 +116,6 @@ public class ServerJsonManager {
         Type cardArrayType = new TypeToken<ArrayList<Card>>() {
         }.getType();
         return gson.fromJson(cardsJson, cardArrayType);
-        // sex
     }
 
     public static ArrayList<Card> readOrphanCards(String calendarID, String workspaceId) throws IOException {
@@ -193,10 +190,9 @@ public class ServerJsonManager {
         else
             return gson.fromJson(jsonString, userArrayType);
     }
-
     //endregion
-    //region WRITERS
 
+    //region WRITERS
     public static void writeALLdata(Workspace workspace) throws IOException {
         writeWorkspaceData(workspace);
         String workspaceId = workspace.getId();
@@ -295,8 +291,6 @@ public class ServerJsonManager {
     public static void writeUserData(ArrayList<User> users) throws IOException {
         File userFile = new File(rootDir.getParent() + "/users.json");
 
-        System.out.println("input users arraylist size: " + users.size());
-        
         if (!userFile.exists()) {
             userFile.createNewFile();
         }
@@ -306,11 +300,9 @@ public class ServerJsonManager {
             writer.flush();
         }
     }
-
     //endregion
 
     //region Updating data
-
     public static boolean addToUsers(User user) {
         ArrayList<User> users;
         try {
@@ -325,67 +317,5 @@ public class ServerJsonManager {
         }
         return true;
     }
-
     //endregion
-
-    public static void main(String[] args) throws IOException {
-        ArrayList<Card> cards = new ArrayList<>(List.of(
-                new Card("Card 1", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 2", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 3", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
-        ));
-        ArrayList<KanbanBoard> boards = new ArrayList<>(List.of(
-                new KanbanBoard("Board 1", "desc", new Date(), new Date(), new Calendar(), getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1), new HashMap<>())
-        ));
-        boards.get(0).addNewItemColumn("Column 1", cards);
-
-        ArrayList<Card> orphanCards = new ArrayList<>(List.of(
-                new Card("Card 4", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 5", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1)),
-                new Card("Card 6", "Desc", getRandomDateWithin7Days(-1), getRandomDateWithin7Days(1))
-        ));
-
-        ArrayList<User> users = new ArrayList<>(List.of(
-                new User("User1", sha256Hex("password123"), "test@agh.edu.pl")
-        ));
-
-        Workspace workspace = new Workspace("Test workspace", "Description");
-        workspace.setMembers(users);
-
-        ArrayList<Calendar> calendars = new ArrayList<>(List.of(
-                new Calendar(orphanCards, boards, users, workspace)
-        ));
-
-        ArrayList<User> existingUsers = readUsersData();
-
-        for (User usr : existingUsers)
-            System.out.println(usr.getUsername());
-
-        workspace.setCalendars(calendars);
-        boards.get(0).setCalendar(calendars.get(0));
-
-        writeALLdata(workspace);
-        var readWorkspaces = readALLdata();
-        System.out.println(readWorkspaces);
-
-    }
-
-    static Date getRandomDateWithin7Days(long multiplier) {
-        // Get the current date
-        Date currentDate = new Date();
-
-        // Create a Calendar instance and set it to the current date
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
-        calendar.setTime(currentDate);
-
-        // Generate a random number of milliseconds within 7 days
-        Random random = new Random();
-        long randomMillisToAdd = multiplier * Math.abs(random.nextLong() % (7 * 24 * 60 * 60 * 1000));
-
-        // Add the random duration to the current date
-        calendar.add(java.util.Calendar.MILLISECOND, (int) randomMillisToAdd);
-
-        // Return the random date
-        return calendar.getTime();
-    }
 }

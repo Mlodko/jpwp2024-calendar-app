@@ -147,11 +147,8 @@ public class Card implements Savable<Card> {
     public boolean hasStartAndEndDate() {
         return this.startTime != null && this.endTime != null;
     }
+
     // other methods:
-
-
-
-
     public Card loadFromString(String json_text) {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Color.class, new ColorDeserializer());
@@ -165,30 +162,6 @@ public class Card implements Savable<Card> {
         gsonBuilder.registerTypeAdapter(Color.class, new ColorSerializer());
         Gson gson = gsonBuilder.create();
         return gson.toJson(this);
-    }
-
-
-
-    /*
-    public static Card main(String[] args) {
-        Card card = new Card();
-        card.id = "7yrfhq3ojicf";
-        card.title = "Jebać Javę";
-        card.endTime = new Date();
-        card.labelColor = Color.RED;
-
-        System.out.println(card.saveToString());
-
-        Card new_card = new Card().loadFromString(card.saveToString());
-
-        System.out.println(new_card.saveToString());
-    }
-    */
-
-    public static void main(String[] args) {
-        UUID uuid = UUID.randomUUID();
-        System.out.println(uuid.toString());
-        //System.out.println(new Date(uuid.timestamp()).toString());
     }
 }
 

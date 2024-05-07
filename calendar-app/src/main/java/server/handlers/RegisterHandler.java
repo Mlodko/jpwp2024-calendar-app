@@ -27,8 +27,10 @@ public class RegisterHandler extends Handler.Abstract {
             callback.succeeded();
             return true;
         }
+
         // Read data
-        String requestJson = null;
+        String requestJson = null; // a debatable choice of starting value assignment lol
+
         try {
             requestJson = Content.Source.asString(request);
             if (requestJson == null) {
@@ -42,7 +44,6 @@ public class RegisterHandler extends Handler.Abstract {
         }
 
         User requestUser = gson.fromJson(requestJson, User.class);
-
         Optional<User> registeredUser = manager.registerUser(requestUser.getUsername(), requestUser.getPasswordHash(), requestUser.getEmail());
 
         if (registeredUser.isEmpty()) {

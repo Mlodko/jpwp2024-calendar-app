@@ -74,21 +74,8 @@ public class CardHandler extends Handler.Abstract {
                 URLDecoder.decode(parameters.getValue("card-ids"), StandardCharsets.UTF_8).replaceAll("/", "").split(",")).toList();
 
         ArrayList<Card> requestedCards;
-        //ObjectManager.refreshWorkspaces();
+
         if(parameters.getValue("type").equals("board-card")) {
-            /*
-            requestedCards = ObjectManager.getWorkspaces().stream()
-                    .filter(workspace -> workspace.getId().equals(workspaceId))
-                    .map(Workspace::getCalendars)
-                    .flatMap(ArrayList::stream)
-                    .filter(calendar -> calendar.getID().equals(calendarId))
-                    .map(Calendar::getKanbanBoards)
-                    .flatMap(ArrayList::stream)
-                    .map(KanbanBoard::getItems)
-                    .flatMap(ArrayList::stream)
-                    .filter(card -> cardIds.contains(card.getId()))
-                    .collect(Collectors.toCollection(ArrayList::new));
-             */
             try {
                 requestedCards = ServerJsonManager.readAllKanbanCardsData(calendarId, workspaceId).stream()
                         .filter(card -> cardIds.contains(card.getId()))

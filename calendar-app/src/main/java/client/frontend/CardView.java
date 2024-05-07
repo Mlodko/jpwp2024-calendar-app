@@ -164,9 +164,6 @@ public class CardView {
             }
         });
 
-
-
-
         VBox vbox = new VBox();
         vbox.setAlignment(Pos.CENTER_RIGHT);
         vbox.setSpacing(5);

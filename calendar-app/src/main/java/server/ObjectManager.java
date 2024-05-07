@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class ObjectManager {
+
     private static ArrayList<Workspace> workspaces = ServerJsonManager.readALLdata();
 
     public static void addToWorkspaces(ArrayList<Workspace> workspaces) throws IOException {

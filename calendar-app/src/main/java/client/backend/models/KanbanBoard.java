@@ -47,7 +47,6 @@ public class KanbanBoard implements Savable<KanbanBoard> {
         });
     }
 
-
     //region Getters/setters
     public String getId() {
         return this.id;
@@ -225,5 +224,4 @@ public class KanbanBoard implements Savable<KanbanBoard> {
     public String saveToString() {
         return new GsonBuilder().registerTypeAdapter(Card.class, new CardIdSerializer()).create().toJson(this);
     }
-
 }

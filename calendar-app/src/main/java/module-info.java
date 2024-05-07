@@ -12,7 +12,6 @@ module client.backend {
     requires javax.servlet.api;
     requires org.eclipse.jetty.client;
 
-
     opens com.example.calendarapp to javafx.fxml;
     exports client.frontend;
     exports client.backend.models;

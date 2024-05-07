@@ -24,7 +24,6 @@ public class LoginHandler extends Handler.Abstract {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
     private static final UserManager manager = new UserManager();
 
-
     @Override
     public boolean handle(Request request, Response response, Callback callback) {
 
@@ -57,7 +56,6 @@ public class LoginHandler extends Handler.Abstract {
         }
 
         User requestUser = gson.fromJson(requestJson, User.class);
-
         Optional<User> loggedInUser = manager.loginUser(requestUser.getUsername(), requestUser.getPasswordHash());
 
         if (loggedInUser.isEmpty()) {

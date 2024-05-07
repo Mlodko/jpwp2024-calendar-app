@@ -59,13 +59,6 @@ public class LoginView {
                 return;
             }
 
-            /*
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Successfully logged in!\n" +
-                    "Username: " + loggedInUser.get().getUsername() +
-                    "Email: " + loggedInUser.get().getEmail(), ButtonType.OK);
-            alert.showAndWait();
-            */
-
             Stage workspaceStage = new Stage();
             workspaceStage.setTitle("Choose your workspace");
 
@@ -133,14 +126,10 @@ public class LoginView {
         Button cancelButton = new Button("Cancel");
 
         StackPane okPane = new StackPane(okButton);
-        //okPane.setAlignment(Pos.CENTER);
-
         StackPane cancelPane = new StackPane(cancelButton);
-        //cancelPane.setAlignment(Pos.CENTER);
 
         gridPane.add(okPane, 0, 4);
         gridPane.add(cancelPane, 1, 4);
-
 
         cancelButton.setOnAction(event -> {
            Stage loginStage = new Stage();
@@ -193,6 +182,7 @@ public class LoginView {
 
             Stage mainStage = new Stage();
             mainStage.setTitle("Calendar App");
+
             try {
                 mainStage.setScene(new MainView().createMainView(registeredUser.get(), new Workspace("Default", "Default")));
             } catch (IOException e) {

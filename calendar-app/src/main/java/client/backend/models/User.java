@@ -24,10 +24,9 @@ public class User implements Savable<User>{
     @Expose String email = new String();
     @Expose ArrayList<String> assignedWorkspaceIds = new ArrayList<>();
     String password;
-    String authToken; // Token that the server sends on login, used to authenticate the user from now on
+    String authToken; // Token the server sends on login, used to authenticate user's requests from now on
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
-
 
     public User() { }
 
@@ -112,11 +111,9 @@ public class User implements Savable<User>{
         }
         assignedWorkspaceIds.addAll(List.of(workspaceIds));
     }
-
     //endregion
 
     //region Logging in/registering
-
     public static Optional<User> login(String username, String password) throws Exception {
         Optional<User> loggedInUser;
 
@@ -138,12 +135,9 @@ public class User implements Savable<User>{
 
         return registeredUser.map(user -> user.setPassword(password));
     }
-
     //endregion
 
-
     public boolean logOut(Workspace workspace) throws Exception {
-
         JsonManager.writeALLdata(workspace);
 
         return this.logOut();
@@ -168,7 +162,6 @@ public class User implements Savable<User>{
         return true;
     }
 
-
     @Override
     public User loadFromString(String json_text) {
         return gson.fromJson(json_text, User.class);
@@ -178,9 +171,4 @@ public class User implements Savable<User>{
     public String saveToString() {
         return gson.toJson(this);
     }
-
-    /*
-    public static void main(String[] args) throws Exception {
-        Optional<User> user = User.register("1", "2", "3");
-    }*/
 }

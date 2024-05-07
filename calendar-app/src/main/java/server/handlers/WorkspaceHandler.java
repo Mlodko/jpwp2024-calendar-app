@@ -28,7 +28,6 @@ public class WorkspaceHandler extends Handler.Abstract {
 
     @Override
     public boolean handle(Request request, Response response, Callback callback) {
-
         // Check auth
         if (!request.getHeaders().contains(HttpHeader.AUTHORIZATION)) {
             response.setStatus(401); // Unauthorized
@@ -115,8 +114,6 @@ public class WorkspaceHandler extends Handler.Abstract {
     }
 
     private void handlePostRequest(Request request, Response response, Callback callback) {
-
-
         // Parse workspace part
         String requestJson;
         try {

@@ -84,21 +84,6 @@ public class CalendarHandler extends Handler.Abstract {
         String workspaceId = parameters.getValue("workspace-id");
         List<String> calendarIds = Arrays.stream(parameters.getValue("calendar-ids").replaceAll("/", "").split(",")).toList();
 
-        /*
-        ArrayList<Calendar> requestedCalendars = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspace.getId().equals(workspaceId))
-                .map(Workspace::getCalendars)
-                .flatMap(ArrayList::stream)
-                .filter(calendar -> calendarIds.contains(calendar.getID()))
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        if(requestedCalendars.isEmpty()) {
-            response.setStatus(404);
-            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find specified calendars"), callback);
-            return;
-        }
-         */
-
         ArrayList<Calendar> requestedCalendars = new ArrayList<>();
         for(String calendarId : calendarIds) {
             requestedCalendars.add(ServerJsonManager.readCalendarStructureData(calendarId, workspaceId).get());
@@ -160,19 +145,6 @@ public class CalendarHandler extends Handler.Abstract {
         Type calendarArrayType = new TypeToken<ArrayList<Calendar>>(){}.getType();
         ArrayList<Calendar> calendarsToAdd = gson.fromJson(rootObject.get("calendars"), calendarArrayType);
 
-        /*
-        ObjectManager.refreshWorkspaces();
-        Optional<Workspace> workspaceToModify = ObjectManager.getWorkspaces().stream()
-                .filter(workspace -> workspace.getId().equals(workspaceId))
-                .findFirst();
-
-        if(workspaceToModify.isEmpty()) {
-            response.setStatus(404); // Not found
-            response.write(true, StandardCharsets.UTF_8.encode("Couldn't find specified workspace"), callback);
-            return;
-        }
-         */
-
         try {
             Workspace workspace = ServerJsonManager.readWorkspaceData(workspaceId);
             workspace.addToCalendars(calendarsToAdd);
@@ -185,15 +157,6 @@ public class CalendarHandler extends Handler.Abstract {
             response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspace"), callback);
             return;
         }
-
-        /*
-        workspaceToModify.get().addToCalendars(calendarsToAdd);
-        if(!ObjectManager.writeWorkspaceFromCache(workspaceId)) {
-            response.setStatus(500);
-            response.write(true, StandardCharsets.UTF_8.encode("Couldn't write workspace"), callback);
-            return;
-        }
-         */
 
         response.setStatus(200);
     }

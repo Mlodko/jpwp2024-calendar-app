@@ -166,7 +166,7 @@ public class Workspace implements Savable<Workspace>{
                     }
 
                     board.getItemIds().forEach((columnName, cardIds) -> {
-                        board.addToItemsList(columnName, requestManager.getKanbanCards(authToken, workspaceId,
+                        board.getItemsLists().put(columnName, requestManager.getKanbanCards(authToken, workspaceId,
                                 calendar.getID(), board.getId(), cardIds).orElseThrow());
                     });
                 }

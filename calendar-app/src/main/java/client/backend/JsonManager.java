@@ -196,6 +196,10 @@ public class JsonManager {
         for(String calendarId : workspace.getCalendarIds()) {
             File calendarDir = new File(rootDir + "/workspace/calendar-" + calendarId + "/");
             calendarDir.mkdirs();
+            new File(calendarDir.toPath() + "/calendar.json").createNewFile();
+            new File(calendarDir.toPath() + "/boards.json").createNewFile();
+            new File(calendarDir.toPath() + "/cards.json").createNewFile();
+            new File(calendarDir.toPath() + "/orphans.json").createNewFile();
         }
 
         String json = gson.toJson(workspace);

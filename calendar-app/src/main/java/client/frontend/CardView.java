@@ -19,6 +19,8 @@ import org.commonmark.renderer.html.HtmlRenderer;
 
 import client.backend.models.User;
 import client.backend.models.Workspace;
+
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -108,6 +110,11 @@ public class CardView {
         textArea.setWrapText(true);
         textArea.setEditable(true);
 
+        HBox dateControls = new HBox();
+        DatePicker startTimePicker = new DatePicker();
+        DatePicker endTimePicker = new DatePicker();
+        dateControls.getChildren().addAll(startTimePicker, endTimePicker);
+
         // Bind the TextArea's text property to itself to preserve new lines
         textArea.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue)) {
@@ -119,6 +126,8 @@ public class CardView {
         save.setOnAction(event -> {
             card.setTitle(titleField.getText());
             card.setDescription(textArea.getText());
+            card.setStartTime(Date.from(startTimePicker.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            card.setEndTime(Date.from(endTimePicker.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             card.setLastModifyTime(new Date());
 
             if (!board.getItemIds().get(column).contains(card.getId())) {
@@ -155,12 +164,15 @@ public class CardView {
             }
         });
 
+
+
+
         VBox vbox = new VBox();
         vbox.setAlignment(Pos.CENTER_RIGHT);
         vbox.setSpacing(5);
         vbox.setPadding(new Insets(3,3,3, 3));
         VBox.setVgrow(textArea, Priority.ALWAYS);
-        vbox.getChildren().addAll(textArea, save);
+        vbox.getChildren().addAll(textArea, dateControls, save);
 
         StackPane mainField = new StackPane();
         mainField.setAlignment(Pos.CENTER);

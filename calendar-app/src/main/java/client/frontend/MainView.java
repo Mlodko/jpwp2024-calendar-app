@@ -193,6 +193,22 @@ public class MainView {
 
         addCalendar.setOnAction(event -> {
             // TODO handle adding and saving calendar + refresh the view
+            Calendar calendarToAdd = new Calendar();
+            workspace.addToCalendars(calendarToAdd);
+            ArrayList<Calendar> calendarArrayList = new ArrayList<>();
+            calendarArrayList.add(calendarToAdd);
+            ArrayList<Workspace> workspaceArrayList = new ArrayList<>();
+            workspaceArrayList.add(workspace);
+            try(RequestManager requestManager = new RequestManager()) {
+                JsonManager.writeWorkspaceData(workspace);
+                JsonManager.writeCalendarData(calendarToAdd);
+                requestManager.postWorkspaces(MainView.thisUser.getAuthToken(), workspaceArrayList);
+                requestManager.postCalendars(MainView.thisUser.getAuthToken(), workspace.getId(), calendarArrayList);
+            } catch(Exception e) {
+                e.printStackTrace();
+                new Alert(Alert.AlertType.ERROR, "Couldn't create new calendar").show();
+            }
+
             System.out.println("addCalendar clicked O.O");
         });
 
@@ -274,6 +290,16 @@ public class MainView {
             mainVBox.getChildren().addAll(nameLbl, sep, cardVBox);
             listsBox.getChildren().add(mainVBox);
         }
+        VBox newColumnButtonBox = new VBox();
+        newColumnButtonBox.setMaxWidth(250);
+        VBox.setVgrow(newColumnButtonBox, Priority.ALWAYS);
+        newColumnButtonBox.setAlignment(Pos.TOP_CENTER);
+        newColumnButtonBox.setSpacing(8);
+        VBox cardVBox = new VBox();
+        cardVBox.setSpacing(5);
+        newColumnButtonBox.getChildren().add(createColumnAddButton(workspace, board));
+        listsBox.getChildren().add(newColumnButtonBox);
+
 
         kanbanView.setPadding(new Insets(5,5,5,5));
         kanbanView.getChildren().add(listsBox);
@@ -366,6 +392,28 @@ public class MainView {
             }
 
             cardStage.show();
+        });
+
+        return stack;
+    }
+
+    private StackPane createColumnAddButton(Workspace workspace, KanbanBoard board) {
+        StackPane stack = new StackPane();
+        stack.setPadding(new Insets(3,3,3,3));
+        stack.setAlignment(Pos.CENTER);
+        stack.setStyle("-fx-background-color: #bebebe;");
+
+        Label plus = new Label("+");
+        stack.getChildren().add(plus);
+        plus.setOnMouseClicked(event -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Adding new column");
+            dialog.setContentText("Please enter the name of a new column:");
+            dialog.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, _event -> {
+                board.addNewItemColumn(dialog.getEditor().getText());
+                dialog.close();
+            });
+            dialog.show();
         });
 
         return stack;
